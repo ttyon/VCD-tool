@@ -1,0 +1,6 @@
+ffmpeg/
+.idea/
+__pycache__/
+libs/__pycache__/
+
+.DS_Store

@@ -28,20 +28,31 @@ from libs.hashableQListWidgetItem import *
 from libs.request import Request
 
 DEFAULT_OBJ = ["person", "bicycle", "bus", "car", "truck", "motocycle", "carrier", "signage", "bollard", "potted_plant", "chair", "table", "fire_hydrant", "pole"]
+DEFAULT_TRANSFORM = ["border_light",  # black border
+                     "=====================",
+                     "brightness_light", "brightness_medium", "brightness_heavy",  # 밝기 변화
+                     "=====================",
+                     "crop_light", "crop_medium", "crop_heavy",  # 자르기
+                     "=====================",
+                     "flip_light",  # 반전
+                     "=====================",
+                     "format_light",  # 파일 형식 변경
+                     "=====================",
+                     "framerate_light", "framerate_medium", "framerate_heavy",  # framerate 감소
+                     "=====================",
+                     "grayscale_light",  # 흑백 변환
+                     "=====================",
+                     "logo_light", "logo_medium", "logo_heavy",  # 로고 추가
+                     "=====================",
+                     "resolution_light", "resolution_medium",  # resolution 변경
+                     "=====================",
+                     "rotate_light"]  # 회전
 
 
 class TagWindow(QDialog):
     def __init__(self, parent):
-        print("TagWindow 생성")
-
         # 이 클래스에서 사용될 변수들
-        self.save_photo_dir = parent.save_photo_dir # 사진이 저장된 dir
-        self.saveLabelDir = ""
-        self.currentFilePath = ""
-
-        self.itemsToShapes = {}
-        self.shapesToItems = {}
-        print("self.save_photo_dir: ", self.save_photo_dir)
+        self.transforms = []
 
         # 이 클래스에서 사용될 변수들
 
@@ -79,9 +90,7 @@ class TagWindow(QDialog):
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
-
         # 여기 이 부분에 캔버스 넣기~~~
-
         self.canvas = Canvas()
 
         scroll = QScrollArea()
@@ -99,15 +108,15 @@ class TagWindow(QDialog):
         self.labelList.setFixedWidth(180)
         self.gridLayout.addWidget(self.labelList, 0, 2, 1, 1)
 
-        self.photoLabels = QtWidgets.QListWidget()
-        self.photoLabels.setObjectName("photoLabels")
-        self.photoLabels.setFixedWidth(180)
-        self.gridLayout.addWidget(self.photoLabels, 0, 3, 1, 1)
+        self.transformList = QtWidgets.QListWidget()
+        self.transformList.setObjectName("transformList")
+        self.transformList.setFixedWidth(180)
+        self.gridLayout.addWidget(self.transformList, 0, 3, 1, 1)
 
-        self.photoList = QtWidgets.QListWidget()
-        self.photoList.setObjectName("photoList")
-        self.photoList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.photoList, 0, 4, 1, 1)
+        self.transformDefaultList = QtWidgets.QListWidget()
+        self.transformDefaultList.setObjectName("transformDefaultList")
+        self.transformDefaultList.setFixedWidth(180)
+        self.gridLayout.addWidget(self.transformDefaultList, 0, 4, 1, 1)
 
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -165,10 +174,10 @@ class TagWindow(QDialog):
 
         self.labelList.doubleClicked.connect(self.setLabel)
 
-        self.photoLabels.itemChanged.connect(self.lableItemChanged)
-        self.photoLabels.doubleClicked.connect(self.selectShape)
+        self.transformList.itemChanged.connect(self.lableItemChanged)
+        self.transformList.doubleClicked.connect(self.selectShape)
 
-        self.photoList.doubleClicked.connect(self.showPhoto)
+        self.transformDefaultList.doubleClicked.connect(self.addTransform)
 
         self.showBtn.clicked.connect(self.allShow)
         self.dispBtn.clicked.connect(self.allDisapear)
@@ -201,20 +210,18 @@ class TagWindow(QDialog):
             item.setBackground(generateColorByText(tempObj))
             self.labelList.addItem(item)
 
+        for temp in DEFAULT_TRANSFORM:
+            item = QListWidgetItem()
+            item.setText(temp)
+            self.transformDefaultList.addItem(item)
 
-        # 추출한 사진들 list에 넣기
-        self.save_photo_dir = parent.save_photo_dir
-        photos = parent.videoAdmin.photos_to_tag
-
-        file_path = ""
-        for photo in photos:
-            file_path = self.save_photo_dir + "/" + photo
-            self.photoList.addItem(file_path)
-
-        #처음 사진에 초점 맞추기
-        self.photoList.setCurrentRow(0)
-
-        self.loadFile(self.save_photo_dir + "/" + photos[0])
+    def addTransform(self):
+        transform_name = self.transformDefaultList.currentItem().text()
+        if not "===" in transform_name and not transform_name in self.transforms:
+            item = QListWidgetItem()
+            item.setText(transform_name)
+            self.transformList.addItem(item)
+            self.transforms.append(transform_name)
 
     # addLabel subLabel
     def addLabel(self):
@@ -484,9 +491,7 @@ class TagWindow(QDialog):
             self.jsonLoad()
 
     def showPhoto(self):
-        print()
         photo_name = self.photoList.currentItem().text()
-        print(photo_name)
         self.loadFile(photo_name)
 
     def showNextPhoto(self):

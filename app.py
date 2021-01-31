@@ -19,7 +19,7 @@ from collections import OrderedDict
 import cv2
 from natsort import natsorted, ns
 
-from tagWindow import *
+from transformWindow import *
 
 form_class = uic.loadUiType("design.ui")[0]
 DEFAULT_EVENT = ["assault", "pedestrian_abnormal_behavior_fall", "wanderer", "kidnapping", "risk_factors", "reid_objecttracking"]
@@ -44,8 +44,6 @@ class MyWindow(QMainWindow, form_class):
         self.setupUi(self)
         self.startText.setText("0:00:00")
         self.endText.setText("0:00:00")
-        self.startFrameText.setText("0")
-        self.endFrameText.setText("0")
 
         # eventList 기능
         self.eventAdd.clicked.connect(self.addListWidget)
@@ -85,70 +83,13 @@ class MyWindow(QMainWindow, form_class):
 
     def newTaggingPage(self):
 
-        # 프레임 추출한 거 어디에 저장할래?
-        self.save_photo_dir = QFileDialog.getExistingDirectory()
+        # self.save_photo_dir = QFileDialog.getExistingDirectory()
         try:
-            print("dir : " + self.save_photo_dir)
-            filename = self.videoAdmin.selectedVideo
-            print("filename: " + filename)
-            if len(filename) > 0:
-                cap = cv2.VideoCapture(filename)
-                # 현재 재생되고 있는 영상의 정보
-                # length: 프레임 단위 동영상 길이
-                # width: 동여상상
-                length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                fps = cap.get(cv2.CAP_PROP_FPS)
-
-                print("length: ", str(length))
-                print("width: " + str(width))
-                print("height: " + str(height))
-                print("fps: ", str(fps))
-
-                frame_start = int(self.startFrameText.text())
-                frame_end = int(self.endFrameText.text())
-                print("frame_start : ", frame_start)
-                print("frame_end : ", frame_end)
-
-                ########## opencv 이용해 영상에서 프레임 추출
-
-                print("opencv2써서 프레임 추출해봐")
-                count = 0;
-                print("123")
-
-                while True:
-                    ret, frame = cap.read()
-                    if count > frame_end:
-                        break;
-                    if ret:
-                        if frame_start <= count <= frame_end:
-                            # print("안되네",count)
-                            print(self.save_photo_dir+"/"+self.videoAdmin.selectedVideo.split("/")[-1].split(".")[0]+"_"+str(count)+".jpg")
-                            cv2.imwrite(self.save_photo_dir+"/"+self.videoAdmin.selectedVideo.split("/")[-1].split(".")[0]+"_"+str(count)+".jpg", frame)
-                    else:
-                        break
-                    count += 1
-
-            ########## opencv 이용해 영상에서 프레임 추출
-
-            photonames = os.listdir(self.save_photo_dir)
-            print("photonames: ",photonames)
-            # for photo in photonames:
-            #     temp = "1: "+photo
-            #     self.cutList.addItem(temp)
-
-            self.videoAdmin.photos_to_tag = os.listdir(self.save_photo_dir)
-            print(self.videoAdmin.photos_to_tag)
-            self.videoAdmin.photos_to_tag = natsorted(self.videoAdmin.photos_to_tag, alg=ns.IGNORECASE)
-            print(self.videoAdmin.photos_to_tag)
 
             child = TagWindow(self)
-            # setFocusPolicy 를 해서 keyboard이벤트를 이 녀석한테 맞추기
             child.setFocusPolicy(Qt.StrongFocus)
         except:  # 예외가 실행됐을 때, 이 기능에서는 대부분 filedialog 닫았을 때 발생한다.
-            print("filedialog 닫은 오류")
-            print("오류")
+            print("error")
 
     # 버튼 누르면 event 항목 추가
     def addListWidget(self):
@@ -228,14 +169,7 @@ class MyWindow(QMainWindow, form_class):
         fps = cap.get(cv2.CAP_PROP_FPS)
 
         video_time = str(datetime.timedelta(seconds=round(length / fps)))
-        print("어디가 문제니3")
 
-        print('length : ', length)
-        print('width : ', width)
-        print('height : ', height)
-        print('fps : ', fps)
-        print('video time : ', video_time)
-        print("어디가 문제니4")
         if filename != '':
             self.videoView.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
             self.videoView.playBtn.setEnabled(True)
@@ -247,7 +181,6 @@ class MyWindow(QMainWindow, form_class):
     def refreshCutList(self):
         self.cutList.clear()
 
-        print("cutlist 다 삭제")
         self.videoAdmin.refreshList()
 
     # cutList 목록 바꾸기
@@ -314,7 +247,6 @@ class MyWindow(QMainWindow, form_class):
         self.endFrameText.repaint()
 
     def cutVideo(self):
-        print("cutting")
         startTimeString = self.startText.text()
         endTimeString = self.endText.text()
 
@@ -332,7 +264,6 @@ class MyWindow(QMainWindow, form_class):
 
         if videoLen > 0 and len(self.videoAdmin.selectedEvent) > 0 and len(self.videoAdmin.selectedVideo) > 0:
             # 영상 길이가 0초 초과여야  컷리스트에 넣을 것
-            print("cutList에 추가")
             videoName = self.videoAdmin.selectedVideo
             eventName = self.videoAdmin.selectedEvent
             print(videoName)
@@ -354,7 +285,6 @@ class MyWindow(QMainWindow, form_class):
         print("video")
         self.worker.start()
         # 나중에 이거 fileNum 올라가는 거 video 생성 한 번, json 생성 한 번 하고 나서 올라가게 바꿔야 함
-        # 지금은 video 생성할 때 json도 같이 생성하는 걸로 바꿈
         # self.videoAdmin.fileNum += 1
 
     def jsonCreate(self):

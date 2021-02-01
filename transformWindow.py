@@ -1,4 +1,5 @@
 import argparse
+import shutil
 import sys, os
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
@@ -9,6 +10,7 @@ import videoview
 from PyQt5.QtCore import Qt, QUrl, QThread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+import videoview
 
 # 여러가지 라이브러리
 import datetime, random
@@ -26,6 +28,7 @@ from libs.shape import Shape
 from libs.utils import *
 from libs.hashableQListWidgetItem import *
 from libs.request import Request
+from libs.transforms import *
 
 DEFAULT_OBJ = ["person", "bicycle", "bus", "car", "truck", "motocycle", "carrier", "signage", "bollard", "potted_plant", "chair", "table", "fire_hydrant", "pole"]
 DEFAULT_TRANSFORM = ["border_light",  # black border
@@ -70,27 +73,31 @@ class TagWindow(QDialog):
         self.verticalLayout.setObjectName("verticalLayout")
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
-        self.saveDir = QtWidgets.QPushButton()
-        self.saveDir.setObjectName("saveDir")
-        self.verticalLayout.addWidget(self.saveDir)
-        self.nextBtn = QtWidgets.QPushButton()
-        self.nextBtn.setObjectName("nextBtn")
-        self.verticalLayout.addWidget(self.nextBtn)
-        self.prevBtn = QtWidgets.QPushButton()
-        self.prevBtn.setObjectName("prevBtn")
-        self.verticalLayout.addWidget(self.prevBtn)
-        self.detectBtn = QtWidgets.QPushButton()
-        self.detectBtn.setObjectName("detectBtn")
-        self.verticalLayout.addWidget(self.detectBtn)
-        self.jsonBtn = QtWidgets.QPushButton()
-        self.jsonBtn.setObjectName("jsonBtn")
-        self.verticalLayout.addWidget(self.jsonBtn)
+        self.transformBtn = QtWidgets.QPushButton()
+        self.transformBtn.setObjectName("transformBtn")
+        self.verticalLayout.addWidget(self.transformBtn)
+        # self.nextBtn = QtWidgets.QPushButton()
+        # self.nextBtn.setObjectName("nextBtn")
+        # self.verticalLayout.addWidget(self.nextBtn)
+        # self.prevBtn = QtWidgets.QPushButton()
+        # self.prevBtn.setObjectName("prevBtn")
+        # self.verticalLayout.addWidget(self.prevBtn)
+        # self.detectBtn = QtWidgets.QPushButton()
+        # self.detectBtn.setObjectName("detectBtn")
+        # self.verticalLayout.addWidget(self.detectBtn)
+        # self.jsonBtn = QtWidgets.QPushButton()
+        # self.jsonBtn.setObjectName("jsonBtn")
+        # self.verticalLayout.addWidget(self.jsonBtn)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem1)
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         # 여기 이 부분에 캔버스 넣기~~~
+
+        # self.videoView = videoview()
+        # self.videoView.setMinimumSize(QtCore.QSize(500, 0))
+        # self.videoView.setObjectName("videoView")
         self.canvas = Canvas()
 
         scroll = QScrollArea()
@@ -103,39 +110,36 @@ class TagWindow(QDialog):
         self.gridLayout.addWidget(scroll, 0, 1, 1, 1)
         # 여기 이 부분에 캔버스 넣기~~~
 
-        self.labelList = QtWidgets.QListWidget()
-        self.labelList.setObjectName("labelList")
-        self.labelList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.labelList, 0, 2, 1, 1)
+        self.videoList = QtWidgets.QListWidget()
+        self.videoList.setObjectName("videoList")
+        self.videoList.setFixedWidth(180)
+        self.gridLayout.addWidget(self.videoList, 0, 2, 1, 1)
 
         self.transformList = QtWidgets.QListWidget()
         self.transformList.setObjectName("transformList")
         self.transformList.setFixedWidth(180)
         self.gridLayout.addWidget(self.transformList, 0, 3, 1, 1)
 
-        self.transformDefaultList = QtWidgets.QListWidget()
-        self.transformDefaultList.setObjectName("transformDefaultList")
-        self.transformDefaultList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.transformDefaultList, 0, 4, 1, 1)
+        self.defaultList = QtWidgets.QListWidget()
+        self.defaultList.setObjectName("defaultList")
+        self.defaultList.setFixedWidth(180)
+        self.gridLayout.addWidget(self.defaultList, 0, 4, 1, 1)
 
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        self.objText = QtWidgets.QLineEdit()
-        self.objText.setObjectName("objText")
+        spacerItem5 = QtWidgets.QSpacerItem(100, 20, 100, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem5)
 
-        self.objText.setFixedWidth(90)
-        self.horizontalLayout.addWidget(self.objText)
+        self.videoAddBtn = QtWidgets.QPushButton()
+        self.videoAddBtn.setObjectName("videoAddBtn")
+        self.videoAddBtn.setFixedWidth(40)
+        self.horizontalLayout.addWidget(self.videoAddBtn)
 
-        self.addObjBtn = QtWidgets.QPushButton()
-        self.addObjBtn.setObjectName("addObjBtn")
-        self.addObjBtn.setFixedWidth(40)
-        self.horizontalLayout.addWidget(self.addObjBtn)
-
-        self.subObjBtn = QtWidgets.QPushButton()
-        self.subObjBtn.setObjectName("subObjBtn")
-        self.subObjBtn.setFixedWidth(40)
-        self.horizontalLayout.addWidget(self.subObjBtn)
+        self.videoSubBtn = QtWidgets.QPushButton()
+        self.videoSubBtn.setObjectName("videoSubBtn")
+        self.videoSubBtn.setFixedWidth(40)
+        self.horizontalLayout.addWidget(self.videoSubBtn)
 
         self.gridLayout.addLayout(self.horizontalLayout, 1, 2, 1, 1)
 
@@ -143,18 +147,18 @@ class TagWindow(QDialog):
         self.horizontalLayout2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout2.setObjectName("horizontalLayout")
 
-        spacerItem2 = QtWidgets.QSpacerItem(80, 20, 150, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(100, 20, 100, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout2.addItem(spacerItem2)
 
-        self.showBtn = QtWidgets.QPushButton()
-        self.showBtn.setObjectName("showBtn")
-        self.showBtn.setFixedWidth(40)
-        self.horizontalLayout2.addWidget(self.showBtn)
+        self.loadBtn = QtWidgets.QPushButton()
+        self.loadBtn.setObjectName("loadBtn")
+        self.loadBtn.setFixedWidth(45)
+        self.horizontalLayout2.addWidget(self.loadBtn)
 
-        self.dispBtn = QtWidgets.QPushButton()
-        self.dispBtn.setObjectName("dispBtn")
-        self.dispBtn.setFixedWidth(40)
-        self.horizontalLayout2.addWidget(self.dispBtn)
+        self.extBtn = QtWidgets.QPushButton()
+        self.extBtn.setObjectName("extBtn")
+        self.extBtn.setFixedWidth(45)
+        self.horizontalLayout2.addWidget(self.extBtn)
 
         self.gridLayout.addLayout(self.horizontalLayout2, 1, 3, 1, 1)
 
@@ -162,66 +166,206 @@ class TagWindow(QDialog):
         self.setLayout(self.gridLayout_2)
 
         # 함수들
-        self.saveDir.clicked.connect(self.selectSaveDir)
-        self.nextBtn.clicked.connect(self.showNextPhoto)
-        self.prevBtn.clicked.connect(self.showPrePhoto)
-        self.detectBtn.clicked.connect(self.detectOBJ)
-        self.jsonBtn.clicked.connect(self.jsonSave)
+        self.transformBtn.clicked.connect(self.transformVideo)
+        # self.nextBtn.clicked.connect(self.showNextPhoto)
+        # self.prevBtn.clicked.connect(self.showPrePhoto)
+        # self.detectBtn.clicked.connect(self.detectOBJ)
+        # self.jsonBtn.clicked.connect(self.jsonSave)
 
         # addObjBtn subObjBtn addLabel subLabel
-        self.addObjBtn.clicked.connect(self.addLabel)
-        self.subObjBtn.clicked.connect(self.subLabel)
+        self.videoAddBtn.clicked.connect(self.addVideo)
+        self.videoSubBtn.clicked.connect(self.subVideo)
 
-        self.labelList.doubleClicked.connect(self.setLabel)
+        # self.videoList.doubleClicked.connect(self.setLabel)
+        self.transformList.doubleClicked.connect(self.delTransform)
+        self.defaultList.doubleClicked.connect(self.addTransform)
 
-        self.transformList.itemChanged.connect(self.lableItemChanged)
-        self.transformList.doubleClicked.connect(self.selectShape)
+        self.loadBtn.clicked.connect(self.jsonUpload)
+        self.extBtn.clicked.connect(self.jsonDown)
 
-        self.transformDefaultList.doubleClicked.connect(self.addTransform)
-
-        self.showBtn.clicked.connect(self.allShow)
-        self.dispBtn.clicked.connect(self.allDisapear)
-
-        self.saveDir.setText("Save Dir")
-        self.nextBtn.setText("Next Image")
-        self.prevBtn.setText("Prev Image")
-        self.detectBtn.setText("Obj Detect")
-        self.jsonBtn.setText("JSON Save")
-        self.addObjBtn.setText("+")
-        self.subObjBtn.setText("-")
-        self.showBtn.setText("▣")
-        self.dispBtn.setText("□")
+        self.transformBtn.setText("transform")
+        self.videoAddBtn.setText("+")
+        self.videoSubBtn.setText("-")
+        self.loadBtn.setText("load")
+        self.extBtn.setText("extract")
 
         self.setWindowTitle('tagging')
         self.show()
 
-        # canvas pyqtsignal
-        self.canvas.deleteLabel.connect(self.deleteLabel)
-        self.canvas.nextImage.connect(self.showNextPhoto)
-        self.canvas.prevImage.connect(self.showPrePhoto)
-        self.canvas.saveJson.connect(self.jsonSave)
-
-        # UI파일말고 파이썬 코드로 직접 짜는 tagging tool
-
         # 기본 셋팅 라벨 디폴트 값 설정
-        for tempObj in DEFAULT_OBJ:
-            item = QListWidgetItem()
-            item.setText(tempObj)
-            item.setBackground(generateColorByText(tempObj))
-            self.labelList.addItem(item)
+        # for tempObj in DEFAULT_OBJ:
+        #     item = QListWidgetItem()
+        #     item.setText(tempObj)
+        #     item.setBackground(generateColorByText(tempObj))
+        #     self.videoList.addItem(item)
 
+        # default transform and level setting
         for temp in DEFAULT_TRANSFORM:
             item = QListWidgetItem()
             item.setText(temp)
-            self.transformDefaultList.addItem(item)
+            self.defaultList.addItem(item)
+
+    def transformVideo(self):
+
+        saveDirPath = QFileDialog.getExistingDirectory()
+        tempSaveDirPath = "./videos"
+
+        index = self.videoList.count()
+        for i in range(0, index):
+            videopath = self.videoList.item(i).text()
+            base = os.path.basename(videopath)
+
+            count = 1
+            for t in self.transforms:
+                transform = t.split("_")[0]
+                level = t.split("_")[1]
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                # path = tempSaveDirPath + "/" + base + "_" + str(count)
+                meta_data = video_info(videopath)
+
+                print("videopath :", videopath)
+                print("savepath :", path)
+                print("transform :", transform)
+
+                if transform == 'border': # 1
+                    add_border(videopath, path, *meta_data, level="Light")
+                elif transform == 'brightness': # 3
+                    if level == 'light':
+                        brightness(videopath, path, *meta_data, level="Light")
+                    elif level == 'medium':
+                        brightness(videopath, path, *meta_data, level="Medium")
+                    elif level == 'heavy':
+                        brightness(videopath, path, *meta_data, level="Heavy")
+                elif transform == 'crop': # 3
+                    if level == 'light':
+                        crop(videopath, path, *meta_data, level="Light")
+                    elif level == 'medium':
+                        crop(videopath, path, *meta_data, level="Medium")
+                    elif level == 'heavy':
+                        crop(videopath, path, *meta_data, level="Heavy")
+                elif transform == 'flip': # 1
+                    flip(videopath, path, *meta_data, level="Light")
+                elif transform == 'format': # 1
+                    format(videopath, path, level="Light")
+                elif transform == 'framerate': # 3
+                    if level == 'light':
+                        framerate(videopath, path, *meta_data, level="Light")
+                    elif level == 'medium':
+                        framerate(videopath, path, *meta_data, level="Medium")
+                    elif level == 'heavy':
+                        framerate(videopath, path, *meta_data, level="Heavy")
+                elif transform == 'grayscale': # 1
+                    grayscale(videopath, path, *meta_data, level="Heavy")
+                elif transform == 'logo': # 3
+                    if level == 'light':
+                        add_logo(videopath, path, *meta_data, level="Light")
+                    elif level == 'medium':
+                        add_logo(videopath, path, *meta_data, level="Medium")
+                    elif level == 'heavy':
+                        add_logo(videopath, path, *meta_data, level="Heavy")
+                elif transform == 'resolution': # 2
+                    if level == 'light':
+                        resolution(videopath, path, *meta_data, level="Light")
+                    elif level == 'medium':
+                        resolution(videopath, path, *meta_data, level="Medium")
+                elif transform == 'rotate': # 1
+                    rotate(videopath, path, *meta_data, level="Light")
+
+                videopath = path
+                count += 1
+            base = base.split('.')[0] + "_" + str(count-1) + "." + base.split('.')[1]
+            finalvideoPath = os.path.join(tempSaveDirPath, base)
+            temp = saveDirPath + "/" + base
+            shutil.copyfile(finalvideoPath, temp)
+
+        for file in os.listdir(tempSaveDirPath):
+            path = os.path.join(tempSaveDirPath, file)
+            print("path :", path)
+
+
+
+
+        ## 마지막에는 tempSaveDirPath에 저장되어 있는 애들을 saveDirPath로 옮겨야함
+
+
+    def addVideo(self):
+        print("addVideo")
+        filename = QFileDialog.getOpenFileNames(self, "Open Video")
+
+        for filename in filename[0]:
+            self.videoList.addItem(filename)
+
+    def subVideo(self):
+        print("subVideo")
+        row = self.videoList.currentRow()
+        # print(row)
+        self.videoList.takeItem(row)
 
     def addTransform(self):
-        transform_name = self.transformDefaultList.currentItem().text()
+        transform_name = self.defaultList.currentItem().text()
         if not "===" in transform_name and not transform_name in self.transforms:
             item = QListWidgetItem()
             item.setText(transform_name)
             self.transformList.addItem(item)
             self.transforms.append(transform_name)
+
+    def delTransform(self):
+        index = self.transformList.currentRow()
+        self.transformList.takeItem(index)
+        del self.transforms[index]
+
+    def jsonUpload(self):
+        filename, _ = QFileDialog.getOpenFileNames(self, "Open Video")
+
+        try:
+            filename = filename[0]
+
+            with open(filename, 'r') as f:
+                json_data = json.load(f)
+            # print("json_data :", json_data)
+            transforms = json_data['transforms']
+
+            self.transformList.clear()
+            self.transforms = []
+
+            for t in transforms:
+                # print("t :", t)
+                transform = t['transform']
+                level = t['level']
+
+                item = QListWidgetItem()
+                item.setText(transform + '_' + level)
+                self.transformList.addItem(item)
+                self.transforms.append(transform + '_' + level)
+
+        except:
+            print("error")
+
+    def jsonDown(self):
+        filePath, _ = QFileDialog.getSaveFileName()
+
+        if not ".json" in filePath:
+            filePath = filePath + ".json"
+        try :
+            data = OrderedDict()
+            transformData = []
+
+            index = self.transformList.count()
+            for i in range(0, index):
+                item = self.transformList.item(i).text()
+                transform = item.split("_")[0]
+                level = item.split("_")[1]
+
+                transformData.append({"transform": transform,
+                                      "level": level})
+
+            data["transforms"] = transformData
+
+            with open(filePath, 'w', encoding='utf-8') as make_file:
+                json.dump(data, make_file, indent="\t")
+
+        except:
+            print("error")
 
     # addLabel subLabel
     def addLabel(self):

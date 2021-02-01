@@ -187,23 +187,23 @@ def main(level, dataset_path):
 		output_name = os.path.join(dataset_path, 'brightness', level, base)
 		brightness(videopath, output_name, *meta_data, level=level)
 
-		# output_name = os.path.join(dataset_path, 'resolution', level, base)
-		# resolution(videopath, output_name, *meta_data, level=level)
+		output_name = os.path.join(dataset_path, 'resolution', level, base)
+		resolution(videopath, output_name, *meta_data, level=level)
 
-		# output_name = os.path.join(dataset_path, 'format', level, video)
-		# format(videopath, output_name, level=level)
+		output_name = os.path.join(dataset_path, 'format', level, video)
+		format(videopath, output_name, level=level)
 
-		# output_name = os.path.join(dataset_path, 'border', level, base)
-		# add_border(videopath, output_name, *meta_data, level=level)
+		output_name = os.path.join(dataset_path, 'border', level, base)
+		add_border(videopath, output_name, *meta_data, level=level)
 
-		# output_name = os.path.join(dataset_path, 'rotate', level, base)
-		# rotate(videopath, output_name, *meta_data, level=level)
+		output_name = os.path.join(dataset_path, 'rotate', level, base)
+		rotate(videopath, output_name, *meta_data, level=level)
 
-		# output_name = os.path.join(dataset_path, 'flip', level, base)
-		# flip(videopath, output_name, *meta_data, level=level)
+		output_name = os.path.join(dataset_path, 'flip', level, base)
+		flip(videopath, output_name, *meta_data, level=level)
 
-		# output_name = os.path.join(dataset_path, 'grayscale', level, base)
-		# grayscale(videopath, output_name, *meta_data, level=level)
+		output_name = os.path.join(dataset_path, 'grayscale', level, base)
+		grayscale(videopath, output_name, *meta_data, level=level)
 
 
 if __name__ == '__main__':

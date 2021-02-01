@@ -82,7 +82,6 @@ class MyWindow(QMainWindow, form_class):
         # 이거 실행할 코드에 넣기 self.worker.start()
 
     def newTaggingPage(self):
-
         # self.save_photo_dir = QFileDialog.getExistingDirectory()
         try:
 

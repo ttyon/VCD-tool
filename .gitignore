@@ -2,5 +2,10 @@ ffmpeg/
 .idea/
 __pycache__/
 libs/__pycache__/
+test/
 
 .DS_Store
+*.json
+*.mp4
+*.flv
+*.avi

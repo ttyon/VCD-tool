@@ -12,7 +12,6 @@ from PyQt5 import uic
 class VideoView(QWidget):
     def __init__(self, parent=None):
         super(VideoView, self).__init__(parent)
-        print("비디오 객체 만들어진다")
 
         self.init_ui()
 
@@ -77,8 +76,6 @@ class VideoView(QWidget):
     def open_file(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Video")
 
-        print(filename)
-
         if filename != '':
             self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
             self.playBtn.setEnabled(True)
@@ -94,13 +91,11 @@ class VideoView(QWidget):
         if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
             self.playBtn.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPause)
-
             )
 
         else:
             self.playBtn.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPlay)
-
             )
 
     def position_changed(self, position):

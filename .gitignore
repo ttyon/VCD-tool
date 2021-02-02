@@ -9,3 +9,6 @@ test/
 *.mp4
 *.flv
 *.avi
+transformWindow_first.py
+temp.py
+temp.ui

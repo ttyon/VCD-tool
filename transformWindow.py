@@ -1,6 +1,8 @@
 import argparse
 import shutil
 import sys, os
+from functools import partial
+
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import *
@@ -22,6 +24,7 @@ from collections import OrderedDict
 # 영상들 프레임 추출하기 위해 opencv 사용할 것.
 import cv2
 from natsort import natsorted, ns
+from toolBar import ToolBar
 
 from libs.canvas import Canvas
 from libs.shape import Shape
@@ -29,6 +32,7 @@ from libs.utils import *
 from libs.hashableQListWidgetItem import *
 from libs.request import Request
 from libs.transforms import *
+from toolBar import ToolButton
 
 DEFAULT_OBJ = ["person", "bicycle", "bus", "car", "truck", "motocycle", "carrier", "signage", "bollard", "potted_plant", "chair", "table", "fire_hydrant", "pole"]
 DEFAULT_TRANSFORM = ["border_light",  # black border
@@ -52,161 +56,529 @@ DEFAULT_TRANSFORM = ["border_light",  # black border
                      "rotate_light"]  # 회전
 
 
-class TagWindow(QDialog):
-    def __init__(self, parent):
-        # 이 클래스에서 사용될 변수들
-        self.transforms = []
+class WindowMixin(object):
 
-        # 이 클래스에서 사용될 변수들
+    def menu(self, title, actions=None):
+        menu = self.menuBar().addMenu(title)
+        if actions:
+            addActions(menu, actions)
+        return menu
+
+    def toolbar(self, title, actions=None):
+        toolbar = ToolBar(title)
+        toolbar.setObjectName('{}ToolBar'.format(title))
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        if actions:
+            addActions(toolbar, actions)
+        print("ㅗㅗ")
+        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        print("ㅎㅎ")
+        return toolbar
+
+
+def newAction(parent, text, slot=None, shortcut=None,
+              tip=None, icon=None, checkable=False,
+              enable=True):
+    a = QAction(text, parent)
+
+    if icon is not None:
+        a.setIcon(QIcon(icon))
+    if shortcut is not None:
+        a.setShortcut(shortcut)
+    if tip is not None:
+        a.setToolTip(tip)
+        a.setStatusTip(tip)
+    if slot is not None:
+        a.triggered.connect(slot)
+    if checkable:
+        a.setCheckable(True)
+
+    a.setEnabled(enable)
+    print("a :", a)
+    return a
+
+def addActions(widget, actions):
+    for action in actions:
+        if action is None:
+            widget.addSeparator()
+        elif isinstance(action, QMenu):
+            widget.addMenu(action)
+        else:
+            widget.addAction(action)
+
+
+class TagWindow(QDialog, WindowMixin):
+    def __init__(self, parent):
+        # # 이 클래스에서 사용될 변수들
+        self.filePath = None
+        self.fileName = None
+        self.videoWidth = None
+        self.videoHeight = None
+        self.videoDuration = None
+        self.videoFrames = None
+        self.videoFps = None
+
+        self.borderIs = False
+        self.brightnessIs = False
+        self.cropIs = False
+        self.flipIs = False
+        self.formatIs = False
+        self.framerateIs = False
+        self.grayscaleIs = False
+        self.addlogoIs = False
+        self.resolutionIs = False
+        self.rotateIs = False
+
+        self.border = None
+        self.brightness = None
+        self.crop = None
+        self.flip = None
+        self.format = None
+        self.framerate = None
+        self.grayscale = None
+        self.addlogo = None
+        self.resolution = None
+        self.rotate = None
+        # # 이 클래스에서 사용될 변수들
 
         super(TagWindow, self).__init__(parent)
         self.resize(1500, 639)
-        self.setWindowTitle('tagging')
+        self.setWindowTitle("transform")
 
-        self.gridLayout_2 = QGridLayout()
+
+        self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
-
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
-
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
-        self.transformBtn = QtWidgets.QPushButton()
-        self.transformBtn.setObjectName("transformBtn")
-        self.verticalLayout.addWidget(self.transformBtn)
-        # self.nextBtn = QtWidgets.QPushButton()
-        # self.nextBtn.setObjectName("nextBtn")
-        # self.verticalLayout.addWidget(self.nextBtn)
-        # self.prevBtn = QtWidgets.QPushButton()
-        # self.prevBtn.setObjectName("prevBtn")
-        # self.verticalLayout.addWidget(self.prevBtn)
-        # self.detectBtn = QtWidgets.QPushButton()
-        # self.detectBtn.setObjectName("detectBtn")
-        # self.verticalLayout.addWidget(self.detectBtn)
-        # self.jsonBtn = QtWidgets.QPushButton()
-        # self.jsonBtn.setObjectName("jsonBtn")
-        # self.verticalLayout.addWidget(self.jsonBtn)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem1)
-
-        self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
-
-        # 여기 이 부분에 캔버스 넣기~~~
-
-        # self.videoView = videoview()
-        # self.videoView.setMinimumSize(QtCore.QSize(500, 0))
-        # self.videoView.setObjectName("videoView")
-        self.canvas = Canvas()
-
-        scroll = QScrollArea()
-        scroll.setWidget(self.canvas)
-        scroll.setWidgetResizable(True)
-        self.scrollBars = {
-            Qt.Vertical: scroll.verticalScrollBar(),
-            Qt.Horizontal: scroll.horizontalScrollBar()
-        }
-        self.gridLayout.addWidget(scroll, 0, 1, 1, 1)
-        # 여기 이 부분에 캔버스 넣기~~~
-
-        self.videoList = QtWidgets.QListWidget()
-        self.videoList.setObjectName("videoList")
-        self.videoList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.videoList, 0, 2, 1, 1)
-
-        self.transformList = QtWidgets.QListWidget()
-        self.transformList.setObjectName("transformList")
-        self.transformList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.transformList, 0, 3, 1, 1)
-
-        self.defaultList = QtWidgets.QListWidget()
-        self.defaultList.setObjectName("defaultList")
-        self.defaultList.setFixedWidth(180)
-        self.gridLayout.addWidget(self.defaultList, 0, 4, 1, 1)
-
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-
-        spacerItem5 = QtWidgets.QSpacerItem(100, 20, 100, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem5)
-
-        self.videoAddBtn = QtWidgets.QPushButton()
-        self.videoAddBtn.setObjectName("videoAddBtn")
-        self.videoAddBtn.setFixedWidth(40)
-        self.horizontalLayout.addWidget(self.videoAddBtn)
-
-        self.videoSubBtn = QtWidgets.QPushButton()
-        self.videoSubBtn.setObjectName("videoSubBtn")
-        self.videoSubBtn.setFixedWidth(40)
-        self.horizontalLayout.addWidget(self.videoSubBtn)
-
-        self.gridLayout.addLayout(self.horizontalLayout, 1, 2, 1, 1)
-
-        # 체크박스 만들기
-        self.horizontalLayout2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout2.setObjectName("horizontalLayout")
-
-        spacerItem2 = QtWidgets.QSpacerItem(100, 20, 100, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout2.addItem(spacerItem2)
-
+        self.verticalLayout_18 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_18.setObjectName("verticalLayout_18")
+        self.openVideoBtn = QtWidgets.QPushButton()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.openVideoBtn.sizePolicy().hasHeightForWidth())
+        self.openVideoBtn.setSizePolicy(sizePolicy)
+        self.openVideoBtn.setObjectName("openVideoBtn")
+        self.verticalLayout_18.addWidget(self.openVideoBtn)
+        self.pushButton_11 = QtWidgets.QPushButton()
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.verticalLayout_18.addWidget(self.pushButton_11)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_18.addItem(spacerItem)
+        self.horizontalLayout.addLayout(self.verticalLayout_18)
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.listView = QtWidgets.QListView()
+        self.listView.setMinimumSize(QtCore.QSize(640, 360))
+        self.listView.setObjectName("listView")
+        self.verticalLayout.addWidget(self.listView)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.a1 = QtWidgets.QLabel()
+        self.a1.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a1.setFont(font)
+        self.a1.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a1.setObjectName("a1")
+        self.horizontalLayout_3.addWidget(self.a1)
+        self.filePathLabel = QtWidgets.QLabel()
+        self.filePathLabel.setText("")
+        self.filePathLabel.setObjectName("filePathLabel")
+        self.horizontalLayout_3.addWidget(self.filePathLabel)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.a2 = QtWidgets.QLabel()
+        self.a2.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a2.setFont(font)
+        self.a2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a2.setObjectName("a2")
+        self.horizontalLayout_6.addWidget(self.a2)
+        self.fileNameLabel = QtWidgets.QLabel()
+        self.fileNameLabel.setText("")
+        self.fileNameLabel.setObjectName("fileNameLabel")
+        self.horizontalLayout_6.addWidget(self.fileNameLabel)
+        self.verticalLayout.addLayout(self.horizontalLayout_6)
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.a3 = QtWidgets.QLabel()
+        self.a3.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a3.setFont(font)
+        self.a3.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a3.setObjectName("a3")
+        self.horizontalLayout_7.addWidget(self.a3)
+        self.widthLabel = QtWidgets.QLabel()
+        self.widthLabel.setText("")
+        self.widthLabel.setObjectName("widthLabel")
+        self.horizontalLayout_7.addWidget(self.widthLabel)
+        self.a4 = QtWidgets.QLabel()
+        self.a4.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a4.setFont(font)
+        self.a4.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a4.setObjectName("a4")
+        self.horizontalLayout_7.addWidget(self.a4)
+        self.heightLabel = QtWidgets.QLabel()
+        self.heightLabel.setText("")
+        self.heightLabel.setObjectName("heightLabel")
+        self.horizontalLayout_7.addWidget(self.heightLabel)
+        self.verticalLayout.addLayout(self.horizontalLayout_7)
+        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
+        self.a5 = QtWidgets.QLabel()
+        self.a5.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a5.setFont(font)
+        self.a5.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a5.setObjectName("a5")
+        self.horizontalLayout_8.addWidget(self.a5)
+        self.durationLabel = QtWidgets.QLabel()
+        self.durationLabel.setText("")
+        self.durationLabel.setObjectName("durationLabel")
+        self.horizontalLayout_8.addWidget(self.durationLabel)
+        self.a6 = QtWidgets.QLabel()
+        self.a6.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a6.setFont(font)
+        self.a6.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a6.setObjectName("a6")
+        self.horizontalLayout_8.addWidget(self.a6)
+        self.framesLabel = QtWidgets.QLabel()
+        self.framesLabel.setText("")
+        self.framesLabel.setObjectName("framesLabel")
+        self.horizontalLayout_8.addWidget(self.framesLabel)
+        self.verticalLayout.addLayout(self.horizontalLayout_8)
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
+        self.a7 = QtWidgets.QLabel()
+        self.a7.setMaximumSize(QtCore.QSize(80, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.a7.setFont(font)
+        self.a7.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.a7.setObjectName("a7")
+        self.horizontalLayout_9.addWidget(self.a7)
+        self.fpsLabel = QtWidgets.QLabel()
+        self.fpsLabel.setText("")
+        self.fpsLabel.setObjectName("fpsLabel")
+        self.horizontalLayout_9.addWidget(self.fpsLabel)
+        self.verticalLayout.addLayout(self.horizontalLayout_9)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.horizontalLayout_13 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_13.setObjectName("horizontalLayout_13")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.borderLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.borderLabel.setFont(font)
+        self.borderLabel.setObjectName("borderLabel")
+        self.verticalLayout_4.addWidget(self.borderLabel)
+        self.horizontalSlider_3 = QtWidgets.QSlider()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.horizontalSlider_3.sizePolicy().hasHeightForWidth())
+        self.horizontalSlider_3.setSizePolicy(sizePolicy)
+        self.horizontalSlider_3.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_3.setObjectName("horizontalSlider_3")
+        self.verticalLayout_4.addWidget(self.horizontalSlider_3)
+        self.horizontalLayout_13.addLayout(self.verticalLayout_4)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.brightnessLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.brightnessLabel.setFont(font)
+        self.brightnessLabel.setObjectName("brightnessLabel")
+        self.verticalLayout_3.addWidget(self.brightnessLabel)
+        self.horizontalSlider = QtWidgets.QSlider()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.horizontalSlider.sizePolicy().hasHeightForWidth())
+        self.horizontalSlider.setSizePolicy(sizePolicy)
+        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider.setObjectName("horizontalSlider")
+        self.verticalLayout_3.addWidget(self.horizontalSlider)
+        self.horizontalLayout_13.addLayout(self.verticalLayout_3)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_13)
+        self.horizontalLayout_14 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_14.setObjectName("horizontalLayout_14")
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.cropLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.cropLabel.setFont(font)
+        self.cropLabel.setObjectName("cropLabel")
+        self.verticalLayout_7.addWidget(self.cropLabel)
+        self.horizontalSlider_2 = QtWidgets.QSlider()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.horizontalSlider_2.sizePolicy().hasHeightForWidth())
+        self.horizontalSlider_2.setSizePolicy(sizePolicy)
+        self.horizontalSlider_2.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_2.setObjectName("horizontalSlider_2")
+        self.verticalLayout_7.addWidget(self.horizontalSlider_2)
+        self.horizontalLayout_14.addLayout(self.verticalLayout_7)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.flipLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.flipLabel.setFont(font)
+        self.flipLabel.setObjectName("flipLabel")
+        self.verticalLayout_5.addWidget(self.flipLabel)
+        self.pushButton_4 = QtWidgets.QPushButton()
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.verticalLayout_5.addWidget(self.pushButton_4)
+        self.horizontalLayout_14.addLayout(self.verticalLayout_5)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_14)
+        self.horizontalLayout_15 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_15.setObjectName("horizontalLayout_15")
+        self.verticalLayout_11 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_11.setObjectName("verticalLayout_11")
+        self.formatLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.formatLabel.setFont(font)
+        self.formatLabel.setObjectName("formatLabel")
+        self.verticalLayout_11.addWidget(self.formatLabel)
+        self.pushButton_5 = QtWidgets.QPushButton()
+        self.pushButton_5.setObjectName("pushButton_5")
+        self.verticalLayout_11.addWidget(self.pushButton_5)
+        self.horizontalLayout_15.addLayout(self.verticalLayout_11)
+        self.verticalLayout_10 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_10.setObjectName("verticalLayout_10")
+        self.framerateLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.framerateLabel.setFont(font)
+        self.framerateLabel.setObjectName("framerateLabel")
+        self.verticalLayout_10.addWidget(self.framerateLabel)
+        self.pushButton_6 = QtWidgets.QPushButton()
+        self.pushButton_6.setObjectName("pushButton_6")
+        self.verticalLayout_10.addWidget(self.pushButton_6)
+        self.horizontalLayout_15.addLayout(self.verticalLayout_10)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_15)
+        self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_10.setObjectName("horizontalLayout_10")
+        self.verticalLayout_14 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_14.setObjectName("verticalLayout_14")
+        self.grayscale = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.grayscale.setFont(font)
+        self.grayscale.setObjectName("grayscale")
+        self.verticalLayout_14.addWidget(self.grayscale)
+        self.pushButton_7 = QtWidgets.QPushButton()
+        self.pushButton_7.setObjectName("pushButton_7")
+        self.verticalLayout_14.addWidget(self.pushButton_7)
+        self.horizontalLayout_10.addLayout(self.verticalLayout_14)
+        self.verticalLayout_12 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_12.setObjectName("verticalLayout_12")
+        self.addlogoLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.addlogoLabel.setFont(font)
+        self.addlogoLabel.setObjectName("addlogoLabel")
+        self.verticalLayout_12.addWidget(self.addlogoLabel)
+        self.horizontalLayout_16 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_16.setObjectName("horizontalLayout_16")
+        self.adjustXLabel = QtWidgets.QLabel()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.adjustXLabel.sizePolicy().hasHeightForWidth())
+        self.adjustXLabel.setSizePolicy(sizePolicy)
+        self.adjustXLabel.setObjectName("adjustXLabel")
+        self.horizontalLayout_16.addWidget(self.adjustXLabel)
+        self.rotateXslider = QtWidgets.QSlider()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.rotateXslider.sizePolicy().hasHeightForWidth())
+        self.rotateXslider.setSizePolicy(sizePolicy)
+        self.rotateXslider.setOrientation(QtCore.Qt.Horizontal)
+        self.rotateXslider.setObjectName("rotateXslider")
+        self.horizontalLayout_16.addWidget(self.rotateXslider)
+        self.verticalLayout_12.addLayout(self.horizontalLayout_16)
+        self.horizontalLayout_17 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_17.setObjectName("horizontalLayout_17")
+        self.adjustYLabel = QtWidgets.QLabel()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.adjustYLabel.sizePolicy().hasHeightForWidth())
+        self.adjustYLabel.setSizePolicy(sizePolicy)
+        self.adjustYLabel.setObjectName("adjustYLabel")
+        self.horizontalLayout_17.addWidget(self.adjustYLabel)
+        self.rotateYslider = QtWidgets.QSlider()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.rotateYslider.sizePolicy().hasHeightForWidth())
+        self.rotateYslider.setSizePolicy(sizePolicy)
+        self.rotateYslider.setOrientation(QtCore.Qt.Horizontal)
+        self.rotateYslider.setObjectName("rotateYslider")
+        self.horizontalLayout_17.addWidget(self.rotateYslider)
+        self.verticalLayout_12.addLayout(self.horizontalLayout_17)
+        self.horizontalLayout_10.addLayout(self.verticalLayout_12)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_10)
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.verticalLayout_16 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_16.setObjectName("verticalLayout_16")
+        self.resolutionLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.resolutionLabel.setFont(font)
+        self.resolutionLabel.setObjectName("resolutionLabel")
+        self.verticalLayout_16.addWidget(self.resolutionLabel)
+        self.pushButton_9 = QtWidgets.QPushButton()
+        self.pushButton_9.setObjectName("pushButton_9")
+        self.verticalLayout_16.addWidget(self.pushButton_9)
+        self.horizontalLayout_11.addLayout(self.verticalLayout_16)
+        self.verticalLayout_15 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_15.setObjectName("verticalLayout_15")
+        self.rotateLabel = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.rotateLabel.setFont(font)
+        self.rotateLabel.setObjectName("rotateLabel")
+        self.verticalLayout_15.addWidget(self.rotateLabel)
+        self.pushButton_2 = QtWidgets.QPushButton()
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.verticalLayout_15.addWidget(self.pushButton_2)
+        self.horizontalLayout_11.addLayout(self.verticalLayout_15)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
+        self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_12.setObjectName("horizontalLayout_12")
+        self.previewBtn = QtWidgets.QPushButton()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.previewBtn.sizePolicy().hasHeightForWidth())
+        self.previewBtn.setSizePolicy(sizePolicy)
+        self.previewBtn.setMinimumSize(QtCore.QSize(105, 0))
+        self.previewBtn.setMaximumSize(QtCore.QSize(105, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.previewBtn.setFont(font)
+        self.previewBtn.setObjectName("previewBtn")
+        self.horizontalLayout_12.addWidget(self.previewBtn)
+        self.saveBtn = QtWidgets.QPushButton()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.saveBtn.sizePolicy().hasHeightForWidth())
+        self.saveBtn.setSizePolicy(sizePolicy)
+        self.saveBtn.setMinimumSize(QtCore.QSize(105, 0))
+        self.saveBtn.setMaximumSize(QtCore.QSize(105, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.saveBtn.setFont(font)
+        self.saveBtn.setObjectName("saveBtn")
+        self.horizontalLayout_12.addWidget(self.saveBtn)
         self.loadBtn = QtWidgets.QPushButton()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.loadBtn.sizePolicy().hasHeightForWidth())
+        self.loadBtn.setSizePolicy(sizePolicy)
+        self.loadBtn.setMinimumSize(QtCore.QSize(105, 0))
+        self.loadBtn.setMaximumSize(QtCore.QSize(105, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.loadBtn.setFont(font)
         self.loadBtn.setObjectName("loadBtn")
-        self.loadBtn.setFixedWidth(45)
-        self.horizontalLayout2.addWidget(self.loadBtn)
+        self.horizontalLayout_12.addWidget(self.loadBtn)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_12)
+        self.horizontalLayout.addLayout(self.verticalLayout_2)
+        self.gridLayout_2.addLayout(self.horizontalLayout, 0, 0, 1, 1)
 
-        self.extBtn = QtWidgets.QPushButton()
-        self.extBtn.setObjectName("extBtn")
-        self.extBtn.setFixedWidth(45)
-        self.horizontalLayout2.addWidget(self.extBtn)
+        # # 함수들
 
-        self.gridLayout.addLayout(self.horizontalLayout2, 1, 3, 1, 1)
 
-        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
+
+        # # 시스템 변수 초기 셋팅
+
         self.setLayout(self.gridLayout_2)
-
-        # 함수들
-        self.transformBtn.clicked.connect(self.transformVideo)
-        # self.nextBtn.clicked.connect(self.showNextPhoto)
-        # self.prevBtn.clicked.connect(self.showPrePhoto)
-        # self.detectBtn.clicked.connect(self.detectOBJ)
-        # self.jsonBtn.clicked.connect(self.jsonSave)
-
-        # addObjBtn subObjBtn addLabel subLabel
-        self.videoAddBtn.clicked.connect(self.addVideo)
-        self.videoSubBtn.clicked.connect(self.subVideo)
-
-        # self.videoList.doubleClicked.connect(self.setLabel)
-        self.transformList.doubleClicked.connect(self.delTransform)
-        self.defaultList.doubleClicked.connect(self.addTransform)
-
-        self.loadBtn.clicked.connect(self.jsonUpload)
-        self.extBtn.clicked.connect(self.jsonDown)
-
-        self.transformBtn.setText("transform")
-        self.videoAddBtn.setText("+")
-        self.videoSubBtn.setText("-")
-        self.loadBtn.setText("load")
-        self.extBtn.setText("extract")
-
-        self.setWindowTitle('tagging')
+        self.retranslateUi()
         self.show()
 
-        # 기본 셋팅 라벨 디폴트 값 설정
-        # for tempObj in DEFAULT_OBJ:
-        #     item = QListWidgetItem()
-        #     item.setText(tempObj)
-        #     item.setBackground(generateColorByText(tempObj))
-        #     self.videoList.addItem(item)
+    def retranslateUi(self):
+        _translate = QtCore.QCoreApplication.translate
+        self.openVideoBtn.setText(_translate("Dialog", "Open\n""Video"))
+        self.pushButton_11.setText(_translate("Dialog", "Save\n""Video"))
+        self.a1.setText(_translate("Dialog", "file path :"))
+        self.a2.setText(_translate("Dialog", "file name :"))
+        self.a3.setText(_translate("Dialog", "width :"))
+        self.a4.setText(_translate("Dialog", "height :"))
+        self.a5.setText(_translate("Dialog", "duration :"))
+        self.a6.setText(_translate("Dialog", "frames :"))
+        self.a7.setText(_translate("Dialog", "fps :"))
+        self.borderLabel.setText(_translate("Dialog", "border"))
+        self.brightnessLabel.setText(_translate("Dialog", "brightness"))
+        self.cropLabel.setText(_translate("Dialog", "crop"))
+        self.flipLabel.setText(_translate("Dialog", "flip"))
+        self.pushButton_4.setText(_translate("Dialog", "radio group"))
+        self.formatLabel.setText(_translate("Dialog", "format"))
+        self.pushButton_5.setText(_translate("Dialog", "radio group"))
+        self.framerateLabel.setText(_translate("Dialog", "framerate"))
+        self.pushButton_6.setText(_translate("Dialog", "radio group"))
+        self.grayscale.setText(_translate("Dialog", "gray scale"))
+        self.pushButton_7.setText(_translate("Dialog", "radio on off"))
+        self.addlogoLabel.setText(_translate("Dialog", "add logo"))
+        self.adjustXLabel.setText(_translate("Dialog", "x:"))
+        self.adjustYLabel.setText(_translate("Dialog", "y:"))
+        self.resolutionLabel.setText(_translate("Dialog", "resolution"))
+        self.pushButton_9.setText(_translate("Dialog", "radio group"))
+        self.rotateLabel.setText(_translate("Dialog", "rotate"))
+        self.pushButton_2.setText(_translate("Dialog", "radio group"))
+        self.previewBtn.setText(_translate("Dialog", "Priview"))
+        self.saveBtn.setText(_translate("Dialog", "Save"))
+        self.loadBtn.setText(_translate("Dialog", "Load"))
 
-        # default transform and level setting
-        for temp in DEFAULT_TRANSFORM:
-            item = QListWidgetItem()
-            item.setText(temp)
-            self.defaultList.addItem(item)
+    def openVideo(self):
+        print('open video')
+
+    def saveVideo(self):
+        print("save video")
 
     def transformVideo(self):
-
         saveDirPath = QFileDialog.getExistingDirectory()
         tempSaveDirPath = "./videos"
 
@@ -222,10 +594,6 @@ class TagWindow(QDialog):
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 # path = tempSaveDirPath + "/" + base + "_" + str(count)
                 meta_data = video_info(videopath)
-
-                print("videopath :", videopath)
-                print("savepath :", path)
-                print("transform :", transform)
 
                 if transform == 'border': # 1
                     add_border(videopath, path, *meta_data, level="Light")
@@ -273,20 +641,19 @@ class TagWindow(QDialog):
 
                 videopath = path
                 count += 1
+
             base = base.split('.')[0] + "_" + str(count-1) + "." + base.split('.')[1]
             finalvideoPath = os.path.join(tempSaveDirPath, base)
             temp = saveDirPath + "/" + base
+            # temp = os.path.join(saveDirPath, base)
             shutil.copyfile(finalvideoPath, temp)
 
-        for file in os.listdir(tempSaveDirPath):
-            path = os.path.join(tempSaveDirPath, file)
-            print("path :", path)
-
-
-
-
-        ## 마지막에는 tempSaveDirPath에 저장되어 있는 애들을 saveDirPath로 옮겨야함
-
+        # for file in os.listdir(tempSaveDirPath):
+        #     path = os.path.join(tempSaveDirPath, file)
+        #     if os.path.isfile(path):
+        #         print("삭제")
+        #         os.remove(path)
+        #         print("삭제완료")
 
     def addVideo(self):
         print("addVideo")
@@ -367,351 +734,6 @@ class TagWindow(QDialog):
         except:
             print("error")
 
-    # addLabel subLabel
-    def addLabel(self):
-        input = self.objText.text()
-
-        if len(input) > 0:
-            item = QListWidgetItem()
-            item.setText(input)
-            item.setBackground(generateColorByText(input))
-            self.labelList.addItem(item)
-        else:
-            print("Not Add")
-
-    def subLabel(self):
-        row = self.labelList.currentRow()
-        self.labelList.takeItem(row)
-        self.labelList.repaint()
-
-        
-    def allShow(self):
-        for shape in self.canvas.shapes:
-            if shape.label is not None:
-                item = self.shapesToItems[shape]
-                item.setCheckState(Qt.Checked)
-
-    def allDisapear(self):
-        for shape in self.canvas.shapes:
-            if shape.label is not None:
-                item = self.shapesToItems[shape]
-                item.setCheckState(Qt.Unchecked)
-
-    def selectShape(self):
-        for shape in self.canvas.shapes:
-            shape.selected = False
-            self.canvas.repaint()
-
-        print("shape 클릭")
-        item = self.photoLabels.currentItem()
-        print("item : ", item)
-        shape = self.itemsToShapes[item]
-        shape.selected = True
-        self.canvas.repaint()
-
-    def deleteLabel(self):
-        shape = self.canvas.selectedShape
-        if shape.label is not None:
-            item = self.shapesToItems[shape]
-            # 선택된 shape의 item을 list에서 삭제합니다.
-            self.photoLabels.takeItem(self.photoLabels.row(item))
-            self.photoLabels.repaint()
-
-    def lableItemChanged(self, item):
-        print("변경 될 때")
-        shape = self.itemsToShapes[item]
-        self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
-        print("shape의 label : ", shape.label)
-
-    def setLabel(self):
-        print("라벨을 설정합니다.")
-        label = self.labelList.currentItem().text()
-        shape = self.canvas.selectedShape
-
-        # 레이블만 더블클릭 했을 때.
-        if shape is None:
-            return
-
-        # 선택한 shape의 레이블이 존재하면 레이블을 수정하는 걸로하고
-        if shape.label is not None:
-            print("label 수정")
-            shape.label = label
-            shape.line_color = generateColorByText(shape.label)
-
-            item = self.shapesToItems[shape]
-            item.setBackground(generateColorByText(shape.label))
-            item.setText(shape.label)
-
-            self.photoLabels.repaint()
-            self.canvas.repaint()
-        # 선택한 shape의 레이블이 존재하지 않으면 내가 레이블을 새로 만들어서 넣는다.
-        else:
-            print("label 생성")
-            shape.label = label
-            shape.paintLabel = True
-
-            shape.line_color = generateColorByText(shape.label)
-
-            item = HashableQListWidgetItem(shape.label)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Checked)
-            item.setBackground(generateColorByText(shape.label))
-
-            self.itemsToShapes[item] = shape
-            self.shapesToItems[shape] = item
-
-            self.canvas.repaint()
-            self.labelShowList()
-
-    # shape들의 label이 새로 생성이 되었을 때
-    def labelShowList(self):
-        # shape의 어찌구와 label의 순서를 똑같이 생각할 것.. 아니면 버그 생긴다.
-        # self.shapesToItems를 이용해 canvas들의 label이 존재한다면, list에 다시 각자 shape의 item을 list로 뿌려주기.
-        for shape in self.canvas.shapes:
-            if shape.label is not None:
-                item = self.shapesToItems[shape]
-                self.photoLabels.addItem(item)
-
-    def jsonLoad(self):
-        # json파일을 load하면서 canvas에도 shape 추가해주어야함.
-        # json파일을 load하는 것은 image를 load할 때만 한다.
-        # json 파일이 없으면 jsonload는 하지 않는다. 체크
-        annofiles = os.listdir(self.saveLabelDir)
-        jsonfile = self.currentFilePath.split("/")[-1].split(".")[0] + ".json"
-
-        # save label dir에 json파일이
-        if jsonfile in annofiles:
-            if len(self.saveLabelDir) > 0:
-                print("self.currentFilePath : ", self.currentFilePath)
-                print("frame ano 저장 폴더 : ", self.saveLabelDir)
-                currentImageName = self.currentFilePath.split("/")[-1].split(".")[0]
-                file_path = self.saveLabelDir + "/" + self.currentFilePath.split("/")[-1].split(".")[0] + ".json"
-
-                with open(file_path, "r") as json_file:
-                    json_data = json.load(json_file)
-                    results = json_data["results"][0]
-
-                    for detect in results["detection_result"]:
-                        shape = Shape()
-
-                        description = detect["label"][0]["description"]
-                        print("label : ", description)
-
-                        shape.paintLabel = True
-                        shape.label = description
-                        shape.line_color = generateColorByText(shape.label)
-
-                        points = detect["position"]
-                        x = points["x"]
-                        y = points["y"]
-                        w = points["w"]
-                        h = points["h"]
-                        p0 = QPointF(x, y)
-                        p1 = QPointF(x+w, y)
-                        p2 = QPointF(x+w, y+h)
-                        p3 = QPointF(x, y+h)
-
-                        shape.points.append(p0)
-                        shape.points.append(p1)
-                        shape.points.append(p2)
-                        shape.points.append(p3)
-                        shape.close()
-
-                        # 추가된 shape를 item으로 설정한다.
-                        item = HashableQListWidgetItem(shape.label)
-                        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                        item.setCheckState(Qt.Checked)
-                        item.setBackground(generateColorByText(shape.label))
-
-                        self.itemsToShapes[item] = shape
-                        self.shapesToItems[shape] = item
-
-                        self.canvas.shapes.append(shape)
-                self.canvas.repaint()
-
-                # json으로 읽은 shape들 어떻게 itemlist로 출력할래?
-                self.labelShowList()
-
-    def jsonSave(self):
-        # canvas에 label이 지정된 모든 shape들을 json 파일로 저장한다.
-        print("self.currentFilePath : ", self.currentFilePath)
-        print("frame ano 저장 폴더 : ", self.saveLabelDir)
-        currentImageName = self.currentFilePath.split("/")[-1].split(".")[0]
-        print("currentImageName : ", currentImageName)
-
-        # save labe dir이 지정되어야 json으로 저장가능
-        if len(self.saveLabelDir) > 0:
-            data = OrderedDict()
-            data["image_path"] = self.saveLabelDir + "/" + self.currentFilePath.split("/")[-1]
-
-            results = []
-            detection_result = OrderedDict()
-            temp_result = []
-
-            for shape in self.canvas.shapes:
-                if shape.label is not None:
-                    detect = OrderedDict()
-                    label = []
-                    label.append({"description": shape.label,
-                                  "score": 100
-                                  })
-
-                    x = int(shape.points[0].x())
-                    y = int(shape.points[0].y())
-                    w = int(shape.points[2].x() - shape.points[0].x())
-                    h = int(shape.points[2].y() - shape.points[0].y())
-                    position = OrderedDict()
-                    position["x"] = x
-                    position["y"] = y
-                    position["w"] = w
-                    position["h"] = h
-
-                    detect["label"] = label
-                    detect["position"] = position
-
-                    temp_result.append(detect)
-
-            detection_result["detection_result"] = temp_result
-            temp_arr = []
-            temp_arr.append(detection_result)
-            data["results"] = temp_arr
-
-            st_json = json.dumps(data, indent=4)
-            print(st_json)
-
-            print(self.saveLabelDir + '/' + currentImageName +'.json')
-            with open(self.saveLabelDir + '/' + currentImageName +'.json', 'w', encoding='utf-8') as make_file:
-                json.dump(data, make_file, indent="\t")
-
-    def detectOBJ(self):
-        try:
-            # 사진 한 장으로 수정하기
-            args = parse_arguments().parse_args()
-            request = Request()
-
-            result_dir = self.saveLabelDir
-
-            image_dir = self.save_photo_dir
-            image_name = self.currentFilePath.split("/")[-1]
-
-            image_path = os.path.join(image_dir, image_name)
-            result_path = os.path.join(result_dir, image_name.split(".")[0] + ".json")
-            b_image = load_binary_image(image_path)
-
-            print("INFO: module={} / image_name={}\t======\t".format(args.modules, image_name), end="")
-            request.set_request_attr(url=args.url, image_path=b_image, modules=args.modules)
-            response = request.send_request_message()
-            print("success\t======\t", end='')
-
-            with open(result_path, 'w') as result_file:
-                json.dump(response, result_file)
-            print("saved", end='')
-
-            self.jsonLoad()
-            self.canvas.repaint()
-
-
-        except:
-            print(" / fail")
-
-    def selectSaveDir(self):
-        self.saveLabelDir = QFileDialog.getExistingDirectory()
-        if len(self.saveLabelDir) > 0:
-            self.saveDir.setStyleSheet("background-color: red")
-
-    def loadFile(self, filePath=None):
-        """Load the specified file, or the last opened file if None."""
-        self.resetState()
-        # json으로 저장할 때
-        self.currentFilePath = filePath
-
-        filePath = filePath
-        unicodeFilePath = filePath
-        unicodeFilePath = os.path.abspath(unicodeFilePath)
-        imageData = read(unicodeFilePath, None)
-        image = QImage.fromData(imageData)
-        self.canvas.loadPixmap(QPixmap.fromImage(image))
-        if len(self.saveLabelDir) > 0:
-            self.jsonLoad()
-
-    def showPhoto(self):
-        photo_name = self.photoList.currentItem().text()
-        self.loadFile(photo_name)
-
-    def showNextPhoto(self):
-        row = self.photoList.currentRow()
-
-        if row < len(self.photoList) - 1:
-            item = self.photoList.item(row+1)
-            self.loadFile(item.text())
-
-            self.photoList.item(row + 1).setSelected(True)
-            self.photoList.setCurrentRow(row + 1)
-
-    def showPrePhoto(self):
-        row = self.photoList.currentRow()
-
-        if row > 0:
-            item = self.photoList.item(row - 1)
-            self.loadFile(item.text())
-
-            self.photoList.item(row - 1).setSelected(True)
-            self.photoList.setCurrentRow(row - 1)
-
-    def keyPressEvent(self, e):
-        def isPrintable(key):
-            printable = [Qt.Key_Space, Qt.Key_Exclam, Qt.Key_QuoteDbl, Qt.Key_NumberSign, Qt.Key_Dollar,
-                                   Qt.Key_Percent, Qt.Key_Ampersand, Qt.Key_Apostrophe, Qt.Key_ParenLeft,
-                                   Qt.Key_ParenRight, Qt.Key_Asterisk, Qt.Key_Plus, Qt.Key_Comma, Qt.Key_Minus,
-                                   Qt.Key_Period, Qt.Key_Slash, Qt.Key_0, Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4,
-                                   Qt.Key_5, Qt.Key_6, Qt.Key_7, Qt.Key_8, Qt.Key_9, Qt.Key_Colon, Qt.Key_Semicolon,
-                                   Qt.Key_Less, Qt.Key_Equal, Qt.Key_Greater, Qt.Key_Question, Qt.Key_At, Qt.Key_A,
-                                   Qt.Key_B, Qt.Key_C, Qt.Key_D, Qt.Key_E, Qt.Key_F, Qt.Key_G, Qt.Key_H, Qt.Key_I,
-                                   Qt.Key_J, Qt.Key_K, Qt.Key_L, Qt.Key_M, Qt.Key_N, Qt.Key_O, Qt.Key_P, Qt.Key_Q,
-                                   Qt.Key_R, Qt.Key_S, Qt.Key_T, Qt.Key_U, Qt.Key_V, Qt.Key_W, Qt.Key_X, Qt.Key_Y,
-                                   Qt.Key_Z, Qt.Key_BracketLeft, Qt.Key_Backslash, Qt.Key_BracketRight,
-                                   Qt.Key_AsciiCircum, Qt.Key_Underscore, Qt.Key_QuoteLeft, Qt.Key_BraceLeft,
-                                   Qt.Key_Bar, Qt.Key_BraceRight, Qt.Key_AsciiTilde ]
-            if key in printable:
-                return True
-            else:
-                return False
-        control = False
-        if e.modifiers() & Qt.ControlModifier:
-            print('Control')
-            control = True
-        if e.modifiers() & Qt.ShiftModifier:
-            print('Shift')
-        if e.modifiers() & Qt.AltModifier:
-            print('Alt')
-        if e.key() == Qt.Key_Delete:
-            print('Delete')
-        elif e.key() == Qt.Key_Backspace:
-            print('Backspace')
-        elif e.key() in [Qt.Key_Return, Qt.Key_Enter]:
-            print('Enter')
-        elif e.key() == Qt.Key_Escape:
-            print('Escape')
-        elif e.key() == Qt.Key_Right:
-            print('Right')
-        elif e.key() == Qt.Key_Left:
-            print('Left')
-        elif e.key() == Qt.Key_Up:
-            print('Up')
-        elif e.key() == Qt.Key_Down:
-            print('Down')
-        elif e.key() == Qt.Key_A:
-            self.showPrePhoto()
-        elif e.key() == Qt.Key_D:
-            self.showNextPhoto()
-        # if not control and isPrintable(e.key()):
-        #     print(e.text())
-
-    def resetState(self):
-        self.photoLabels.clear()
-        self.itemsToShapes.clear()
-        self.shapesToItems.clear()
-        self.canvas.resetState()
 
 
 def read(filename, default=None):
@@ -731,7 +753,6 @@ def parse_arguments():
     parser.add_argument("--modules", dest='modules', help='names of analysis-module', type=str, default="faster-rcnn-cctv")
 
     return parser
-
 
 
 def load_binary_image(image_path) :

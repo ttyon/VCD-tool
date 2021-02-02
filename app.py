@@ -83,12 +83,14 @@ class MyWindow(QMainWindow, form_class):
 
     def newTaggingPage(self):
         # self.save_photo_dir = QFileDialog.getExistingDirectory()
-        try:
-
-            child = TagWindow(self)
-            child.setFocusPolicy(Qt.StrongFocus)
-        except:  # 예외가 실행됐을 때, 이 기능에서는 대부분 filedialog 닫았을 때 발생한다.
-            print("error")
+        child = TagWindow(self)
+        child.setFocusPolicy(Qt.StrongFocus)
+        # try:
+        #
+        #     child = TagWindow(self)
+        #     child.setFocusPolicy(Qt.StrongFocus)
+        # except:  # 예외가 실행됐을 때, 이 기능에서는 대부분 filedialog 닫았을 때 발생한다.
+        #     print("error")
 
     # 버튼 누르면 event 항목 추가
     def addListWidget(self):

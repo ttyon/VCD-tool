@@ -897,6 +897,7 @@ class TagWindow(QDialog, WindowMixin):
             self.borderIs = False
             print("border OFF")
         else:
+            self.borderIs = True
             print("value :", self.border)
 
     def brightness_change(self):
@@ -905,6 +906,7 @@ class TagWindow(QDialog, WindowMixin):
             self.brightnessIs = False
             print("brightness OFF")
         else:
+            self.brightnessIs = True
             print("value :", self.brightness)
 
     def crop_change(self):
@@ -913,27 +915,44 @@ class TagWindow(QDialog, WindowMixin):
             self.cropIs = False
             print("crop OFF")
         else:
+            self.cropIs = True
             print("value :", self.crop)
 
     def flip_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("flip :", radioBtn.text())
+            self.flip = radioBtn.text()
+            if self.flip is None or self.flip == 'off':
+                self.flipIs = False
+            else:
+                self.flipIs = True
 
     def format_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("format :", radioBtn.text())
+            self.format = radioBtn.text()
+            if self.format is None or self.format == 'off':
+                self.formatIs = False
+            else:
+                self.formatIs = True
 
     def framerate_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("framerate :", radioBtn.text())
+            self.framerate = radioBtn.text()
+            if self.framerate is None or self.framerate == 'off':
+                self.framerateIs = False
+            else:
+                self.framerateIs = True
 
     def grayscale_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("grayscale :", radioBtn.text())
+            self.grayscale = radioBtn.text()
+            if self.grayscale is None or self.grayscale == 'off':
+                self.grayscaleIs = False
+            else:
+                self.grayscaleIs = True
 
     def addlogoX_change(self):
         self.addlogoX = self.addlogoXslider.value()
@@ -952,6 +971,12 @@ class TagWindow(QDialog, WindowMixin):
             print("value :", self.addlogoY)
 
     def addlogoLevel_change(self):
+        self.addlogoLevel = self.logoLevelBox.currentText()
+
+        if self.addlogoLevel == 'off':
+            self.addlogoIs = False
+        else:
+            self.addlogoIs = True
         print("current :", self.logoLevelBox.currentText())
 
     def resolution_change(self):

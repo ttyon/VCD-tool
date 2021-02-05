@@ -204,37 +204,3 @@ def main(level, dataset_path):
 
 		output_name = os.path.join(dataset_path, 'grayscale', level, base)
 		grayscale(videopath, output_name, *meta_data, level=level)
-
-
-if __name__ == '__main__':
-	dataset_path = '/transformed_video'
-	# level = 'Light'
-	# level = 'Medium'
-	level = 'Heavy'
-
-	# level = ['Light', 'Medium', 'Heavy']
-	# for l in level:
-	# if not os.path.isdir(os.path.join(dataset_path, 'resolution', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'resolution', level))
-	if not os.path.isdir(os.path.join(dataset_path, 'framerate', level)):
-		os.makedirs(os.path.join(dataset_path, 'framerate', level))
-	# if not os.path.isdir(os.path.join(dataset_path, 'format', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'format', level))
-	if not os.path.isdir(os.path.join(dataset_path, 'crop', level)):
-		os.makedirs(os.path.join(dataset_path, 'crop', level))
-	# if not os.path.isdir(os.path.join(dataset_path, 'border', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'border', level))
-	if not os.path.isdir(os.path.join(dataset_path, 'logo', level)):
-		os.makedirs(os.path.join(dataset_path, 'logo', level))
-	# if not os.path.isdir(os.path.join(dataset_path, 'rotate', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'rotate', level))
-	if not os.path.isdir(os.path.join(dataset_path, 'brightness', level)):
-		os.makedirs(os.path.join(dataset_path, 'brightness', level))
-	# if not os.path.isdir(os.path.join(dataset_path, 'flip', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'flip', level))
-	# if not os.path.isdir(os.path.join(dataset_path, 'grayscale', level)):
-	# 	os.makedirs(os.path.join(dataset_path, 'grayscale', level))
-
-	main(level, dataset_path)
-
-

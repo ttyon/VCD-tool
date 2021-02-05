@@ -153,6 +153,7 @@ class TagWindow(QDialog, WindowMixin):
         # self.resize(1500, 639)
         self.setWindowTitle("transform")
 
+        # system layout
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
 
@@ -375,15 +376,11 @@ class TagWindow(QDialog, WindowMixin):
         self.brightnessLabel.setObjectName("brightnessLabel")
         self.verticalLayout_3.addWidget(self.brightnessLabel)
 
-        self.brightnessSlider = QtWidgets.QSlider()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.brightnessSlider.sizePolicy().hasHeightForWidth())
-        self.brightnessSlider.setSizePolicy(sizePolicy)
-        self.brightnessSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.brightnessSlider.setObjectName("brightnessSlider")
-        self.verticalLayout_3.addWidget(self.brightnessSlider)
+        self.brightnessBox = QComboBox()
+        self.brightnessBox.addItems(["-36", "-18", "-9", "0", "+9", "+18", "+36"])
+        self.brightnessBox.setCurrentIndex(3)
+        self.verticalLayout_3.addWidget(self.brightnessBox)
+
         self.horizontalLayout_13.addLayout(self.verticalLayout_3)
         self.verticalLayout_2.addLayout(self.horizontalLayout_13)
 
@@ -403,6 +400,8 @@ class TagWindow(QDialog, WindowMixin):
         self.verticalLayout_7.addWidget(self.cropLabel)
 
         self.cropSlider = QtWidgets.QSlider()
+        self.cropSlider.setMinimum(0)
+        self.cropSlider.setMaximum(100)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -459,12 +458,12 @@ class TagWindow(QDialog, WindowMixin):
         self.formatGroup = QGroupBox()
         self.formatOff = QRadioButton("off")
         self.formatOff.setChecked(True)
-        self.formatFlv = QRadioButton("flv")
-        self.formatMp4 = QRadioButton("mp4")
-        self.formatAvi = QRadioButton("avi")
+        # self.formatFlv = QRadioButton(".flv")
+        self.formatMp4 = QRadioButton(".mp4")
+        self.formatAvi = QRadioButton(".avi")
         lbx = QHBoxLayout()
         lbx.addWidget(self.formatOff)
-        lbx.addWidget(self.formatFlv)
+        # lbx.addWidget(self.formatFlv)
         lbx.addWidget(self.formatMp4)
         lbx.addWidget(self.formatAvi)
         self.formatGroup.setLayout(lbx)
@@ -714,13 +713,14 @@ class TagWindow(QDialog, WindowMixin):
         self.saveVideoBtn.clicked.connect(self.saveVideo)
 
         self.logoLevelBox.currentTextChanged.connect(self.addlogoLevel_change)
+        self.brightnessBox.currentTextChanged.connect(self.brightness_change)
 
         self.flipRadioOff.toggled.connect(self.flip_change)
         self.flipRadioVer.toggled.connect(self.flip_change)
         self.flipRadioHor.toggled.connect(self.flip_change)
 
         self.formatOff.toggled.connect(self.format_change)
-        self.formatFlv.toggled.connect(self.format_change)
+        # self.formatFlv.toggled.connect(self.format_change)
         self.formatAvi.toggled.connect(self.format_change)
         self.formatMp4.toggled.connect(self.format_change)
 
@@ -742,12 +742,13 @@ class TagWindow(QDialog, WindowMixin):
         self.rotate270.toggled.connect(self.rotate_change)
 
         self.borderSlider.valueChanged.connect(self.border_change)
-        self.brightnessSlider.valueChanged.connect(self.brightness_change)
         self.cropSlider.valueChanged.connect(self.crop_change)
         self.addlogoXslider.valueChanged.connect(self.addlogoX_change)
         self.addlogoYslider.valueChanged.connect(self.addlogoY_change)
 
-        # # 시스템 변수 초기 셋팅
+        self.previewBtn.clicked.connect(self.preview)
+        self.saveBtn.clicked.connect(self.jsonSave)
+        self.loadBtn.clicked.connect(self.jsonLoad)
 
         self.setLayout(self.gridLayout_2)
         self.retranslateUi()
@@ -808,7 +809,6 @@ class TagWindow(QDialog, WindowMixin):
             self.durationLabel.setText(f'{duration}s')
             self.framesLabel.setText(frames)
             self.fpsLabel.setText(fps)
-
 
     def saveVideo(self):
         print("save video")
@@ -883,13 +883,6 @@ class TagWindow(QDialog, WindowMixin):
             # temp = os.path.join(saveDirPath, base)
             shutil.copyfile(finalvideoPath, temp)
 
-        # for file in os.listdir(tempSaveDirPath):
-        #     path = os.path.join(tempSaveDirPath, file)
-        #     if os.path.isfile(path):
-        #         print("삭제")
-        #         os.remove(path)
-        #         print("삭제완료")
-
     def border_change(self):
         self.border = self.borderSlider.value()
 
@@ -898,34 +891,42 @@ class TagWindow(QDialog, WindowMixin):
             print("border OFF")
         else:
             self.borderIs = True
-            print("value :", self.border)
 
     def brightness_change(self):
-        self.brightness = self.brightnessSlider.value()
-        if self.brightness == 0:
+        self.brightness = int(self.brightnessBox.currentText())
+
+        if self.brightness == 'off' or self.brightness == str(0):
             self.brightnessIs = False
-            print("brightness OFF")
+            print("off")
         else:
             self.brightnessIs = True
-            print("value :", self.brightness)
+            print(self.brightness)
 
     def crop_change(self):
-        self.crop = self.borderSlider.value()
+        self.crop = self.cropSlider.value() / 1000
         if self.crop == 0:
             self.cropIs = False
             print("crop OFF")
         else:
+            print("crop :", self.crop)
             self.cropIs = True
-            print("value :", self.crop)
 
     def flip_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
             self.flip = radioBtn.text()
+
             if self.flip is None or self.flip == 'off':
                 self.flipIs = False
+                print("flip off")
             else:
                 self.flipIs = True
+                if self.flip == "ver":
+                    self.flip = "vflip"
+                elif self.flip == "hor":
+                    self.flip = "hflip"
+
+                print("self.flip :", self.flip)
 
     def format_change(self):
         radioBtn = self.sender()
@@ -959,16 +960,12 @@ class TagWindow(QDialog, WindowMixin):
         if self.addlogoX == 0 and self.addlogoY == 0:
             self.brightnessIs = False
             print("add logo OFF")
-        else:
-            print("value :", self.addlogoX)
 
     def addlogoY_change(self):
         self.addlogoY = self.addlogoYslider.value()
         if self.addlogoX == 0 and self.addlogoY == 0:
             self.addlogoIs = False
             print("add logo OFF")
-        else:
-            print("value :", self.addlogoY)
 
     def addlogoLevel_change(self):
         self.addlogoLevel = self.logoLevelBox.currentText()
@@ -977,70 +974,175 @@ class TagWindow(QDialog, WindowMixin):
             self.addlogoIs = False
         else:
             self.addlogoIs = True
-        print("current :", self.logoLevelBox.currentText())
 
     def resolution_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("resolution_change :", radioBtn.text())
+            self.resolution = radioBtn.text()
+            if self.resolution is None or self.resolution == 'off':
+                self.resolutionIs = False
+            else:
+                self.resolutionIs = True
 
     def rotate_change(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("rotate :", radioBtn.text())
+            self.rotate = radioBtn.text()
+            if self.rotate is None or self.rotate == 'off':
+                self.rotateIs = False
+            else:
+                self.rotateIs = True
 
-    def jsonUpload(self):
-        filename, _ = QFileDialog.getOpenFileNames(self, "Open Video")
+    def preview(self):
+        print("preview")
+
+    def jsonSave(self):
+        filepath, _ = QFileDialog.getSaveFileName(self, "Save Option File", ".", "Json files (*.json)")
 
         try:
-            filename = filename[0]
-
-            with open(filename, 'r') as f:
-                json_data = json.load(f)
-            # print("json_data :", json_data)
-            transforms = json_data['transforms']
-
-            self.transformList.clear()
-            self.transforms = []
-
-            for t in transforms:
-                # print("t :", t)
-                transform = t['transform']
-                level = t['level']
-
-                item = QListWidgetItem()
-                item.setText(transform + '_' + level)
-                self.transformList.addItem(item)
-                self.transforms.append(transform + '_' + level)
-
-        except:
-            print("error")
-
-    def jsonDown(self):
-        filePath, _ = QFileDialog.getSaveFileName()
-
-        if not ".json" in filePath:
-            filePath = filePath + ".json"
-        try :
             data = OrderedDict()
             transformData = []
 
-            index = self.transformList.count()
-            for i in range(0, index):
-                item = self.transformList.item(i).text()
-                transform = item.split("_")[0]
-                level = item.split("_")[1]
-
+            if self.borderIs:
+                transform = "border"
+                level = self.border
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.brightnessIs:
+                transform = "brightness"
+                level = self.brightness
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.cropIs:
+                transform = "crop"
+                level = self.crop
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.flipIs:
+                transform = "flip"
+                level = self.flip
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.formatIs:
+                transform = "format"
+                level = self.format
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.framerateIs:
+                transform = "framerate"
+                level = self.framerate
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.grayscaleIs:
+                transform = "grayscale"
+                level = "Light"
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.addlogoIs:
+                transform = "addlogo"
+                level = self.addlogoLevel
+                location_x = str(self.addlogoX) + "%"
+                location_y = str(self.addlogoY) + "%"
+                transformData.append({"transform": transform,
+                                      "level": level,
+                                      "location_x": location_x,
+                                      "location_y": location_y})
+            if self.resolutionIs:
+                transform = "resolution"
+                level = self.resolution
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.rotateIs:
+                transform = "rotate"
+                level = self.rotate
                 transformData.append({"transform": transform,
                                       "level": level})
 
             data["transforms"] = transformData
 
-            with open(filePath, 'w', encoding='utf-8') as make_file:
+            with open(filepath, 'w', encoding='utf-8') as make_file:
                 json.dump(data, make_file, indent="\t")
+        except:
+            print("error")
+
+    def jsonLoad(self):
+        filepath, _ = QFileDialog.getOpenFileName(self, "Load Option File", ".", "Json files (*.json)")
+
+        print("filepath :", filepath)
+        try:
+            self.transformClear()
+            self.printCurrentTransform()
+            # with open(filepath, 'r') as f:
+            #     json_data = json.load(f)
+            # # print("json_data :", json_data)
+            # transforms = json_data['transforms']
+            #
+            # self.transformList.clear()
+            # self.transforms = []
+            #
+            # for t in transforms:
+            #     # print("t :", t)
+            #     transform = t['transform']
+            #     level = t['level']
+            #
+            #     item = QListWidgetItem()
+            #     item.setText(transform + '_' + level)
+            #     self.transformList.addItem(item)
+            #     self.transforms.append(transform + '_' + level)
 
         except:
             print("error")
+
+    def transformClear(self):
+        self.borderSlider.setValue(0)
+        self.brightnessBox.setCurrentIndex(3)
+        self.cropSlider.setValue(0)
+
+        self.flipRadioOff.setChecked(True)
+        self.flipRadioVer.setChecked(False)
+        self.flipRadioHor.setChecked(False)
+
+        self.formatOff.setChecked(True)
+        self.formatMp4.setChecked(False)
+        self.formatAvi.setChecked(False)
+
+        self.framerateOff.setChecked(True)
+        self.framerate5.setChecked(False)
+        self.framerate10.setChecked(False)
+        self.framerate20.setChecked(False)
+
+        self.grayscaleOff.setChecked(True)
+        self.grayscaleOn.setChecked(False)
+
+        self.logoLevelBox.setCurrentIndex(0)
+        print("1")
+        self.addlogoXslider.setValue(0)
+        self.addlogoYslider.setValue(0)
+        print("1")
+        self.resolutionOff.setChecked(True)
+        self.resolutionCIF.setChecked(False)
+        self.resolutionQCIF.setChecked(False)
+        print("1")
+        self.rotateOff.setChecked(True)
+        self.rotate90.setChecked(False)
+        self.rotate180.setChecked(False)
+        self.rotate270.setChecked(False)
+        print("2")
+
+    def printCurrentTransform(self):
+        print("==============")
+        print("border :", self.border)
+        print("brightness :", self.brightness)
+        print("crop :", self.crop)
+        print("flip :", self.flip)
+        print("format :", self.format)
+        print("framerate :", self.framerate)
+        print("grayscale :", self.grayscale)
+        print("addlogo :", self.addlogoLevel)
+        print("logo x :", self.addlogoX)
+        print("logo y :", self.addlogoY)
+        print("resolution :", self.resolution)
+        print("rotate :", self.rotate)
 
 
 def videoInfo(filepath):
@@ -1072,17 +1174,6 @@ def read(filename, default=None):
             return f.read()
     except:
         return default
-
-
-def parse_arguments():
-    """Parse input arguments"""
-    parser = argparse.ArgumentParser(description='Request generator')
-    parser.add_argument("--url", dest='url', help='URL of analysis-site', type=str, default='http://mltwins.sogang.ac.kr:8777/analyzer/')
-    parser.add_argument("--image_dir", dest='image_dir', help='Image dir to send as request', type=str, default=os.path.join(os.getcwd(), "images"))
-    parser.add_argument("--result_dir", dest='result_dir', help='result dir to save', type=str, default=os.path.join(os.getcwd(), "result"))
-    parser.add_argument("--modules", dest='modules', help='names of analysis-module', type=str, default="faster-rcnn-cctv")
-
-    return parser
 
 
 def load_binary_image(image_path) :

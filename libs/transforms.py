@@ -23,6 +23,8 @@ def resolution(inputpath, outputpath, width, height, fps, level='Light'):
 	elif level == 'Medium':
 		re_width, re_height = res['qCIF']
 
+	re_width, re_height = res[level]
+
 	command = [
 		'ffmpeg', '-y',
 		'-i', inputpath,
@@ -33,19 +35,17 @@ def resolution(inputpath, outputpath, width, height, fps, level='Light'):
 
 
 def framerate(inputpath, outputpath, width, height, fps, level='Light'):
-	if level == 'Light':
-		re_fps = 20
-	elif level == 'Medium':
-		re_fps = 10
-	elif level == 'Heavy':
-		re_fps = 5
+	re_fps = level
 
 	command = 'ffmpeg -y -i ' + inputpath + ' -vf "setpts=1.25*PTS" -r ' + str(re_fps) + ' ' + outputpath
 	subprocess.call(command, shell=True)
 
 
 def format(inputpath, outputpath, level='Light'):
-	new_ext = random.choice(['.mp4', '.avi'])
+	if level == '.mp4':
+		new_ext = '.mp4'
+	else:
+		new_ext = '.avi'
 	outputpath = outputpath + new_ext
 	command = ''
 	if new_ext=='.avi':
@@ -80,8 +80,14 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
 
 
 def rotate(inputpath, outputpath, width, height, fps, level='Light'):
-	rotate_list = ['"transpose=1"', '"transpose=2"', '"transpose=2,transpose=2"']
-	transpose = random.choice(rotate_list)
+	if level == 90:
+		transpose = '"transpose=1"'
+	elif level == 180:
+		transpose = '"transpose=2,transpose=2"'
+	elif level == 270:
+		transpose = '"transpose=2"'
+	# rotate_list = ['"transpose=1"', '"transpose=2"', '"transpose=2,transpose=2"']
+	# transpose = random.choice(rotate_list)
 	command = 'ffmpeg -y -i ' + inputpath + ' -vf ' + transpose + ' ' + outputpath
 	subprocess.call(command, shell=True)
 
@@ -125,7 +131,8 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 	# subprocess.call(command, shell=True)
 
 
-def add_logo(videopath, outputpath, width, height, fps, level='Light'):
+def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
+	print("level :", level)
 	if level == 'Light':
 		logopath = random.choice(glob.glob(os.path.join('logo', 'logo_Light', '*')))
 	elif level == 'Medium':
@@ -133,29 +140,38 @@ def add_logo(videopath, outputpath, width, height, fps, level='Light'):
 	elif level == 'Heavy':
 		logopath = random.choice(glob.glob(os.path.join('logo', 'logo_Heavy', '*')))
 
-	logo_x = width * 0.05
-	logo_y = height * 0.05
+	# logo_x = width * 0.05
+	# logo_y = height * 0.05
+	print("xlocation :", xlocation)
+	print("ylocation :", ylocation)
+	logo_x = width * xlocation
+	logo_y = height * ylocation
+	print("logo_x :", logo_x)
+	print("logo_y :", logo_y)
+	print("logopath :", logopath)
+
 
 	command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath+ ' -filter_complex "overlay=' + str(logo_x) + ":" + str(logo_y) + '" ' + outputpath
+
+	print("command :", command)
 	subprocess.call(command, shell=True)
 
 
-def brightness(videopath, outputpath, width, height, fps, level='Light'):
-	if level == 'Light':
-		rate = random.choice([0.09, -0.09])
-	elif level == 'Medium':
-		rate = random.choice([0.18, -0.36])
-	elif level == 'Heavy':
-		rate = random.choice([0.36, -0.18])
+def brightness(videopath, outputpath, level):
+	print("level :", level)
+	rate = level / 100
+	print("rate :", rate)
 
 	command = 'ffmpeg -y -i ' + videopath +' -vf eq=brightness=' + str(rate) + ' -c:a copy ' + outputpath
 	subprocess.call(command, shell=True)
 
 
 def flip(videopath, outputpath, width, height, fps, level='Light'):
-	command1 = 'ffmpeg -y -i ' + videopath + ' -filter:v "hflip" -c:a copy ' + outputpath
-	command2 = 'ffmpeg -y -i ' + videopath + ' -filter:v "vflip" -c:a copy ' + outputpath
-	command = random.choice([command1, command2])
+	if level == 'hflip':
+		command = 'ffmpeg -y -i ' + videopath + ' -filter:v "hflip" -c:a copy ' + outputpath
+	else:
+		command = 'ffmpeg -y -i ' + videopath + ' -filter:v "vflip" -c:a copy ' + outputpath
+
 	subprocess.call(command, shell=True)
 
 

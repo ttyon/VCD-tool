@@ -110,8 +110,11 @@ def addActions(widget, actions):
 class TagWindow(QDialog, WindowMixin):
     def __init__(self, parent):
         # # 이 클래스에서 사용될 변수들
+        self.videoPath = None
+        self.videoName = None
         self.optionFilepath = None
         self.image = None
+        self.progress = None
 
         # info
         self.filePath = None
@@ -377,7 +380,8 @@ class TagWindow(QDialog, WindowMixin):
         self.verticalLayout_3.addWidget(self.brightnessLabel)
 
         self.brightnessBox = QComboBox()
-        self.brightnessBox.addItems(["-36", "-18", "-9", "0", "+9", "+18", "+36"])
+        self.brightnessBox.addItems(["-36", "-18", "-9", "0", "9", "18", "36"])
+
         self.brightnessBox.setCurrentIndex(3)
         self.verticalLayout_3.addWidget(self.brightnessBox)
 
@@ -785,6 +789,9 @@ class TagWindow(QDialog, WindowMixin):
         filepath, _ = QFileDialog.getOpenFileName(self, 'Choose video', '.', "Video Files (*.avi *.mp4 *.flv)")
         if filepath:
             filename = os.path.basename(filepath)
+            self.videoPath = filepath
+            self.videoName = filename
+
             meta_data = videoInfo(filepath)
 
             width = str(meta_data[0])
@@ -811,77 +818,107 @@ class TagWindow(QDialog, WindowMixin):
             self.fpsLabel.setText(fps)
 
     def saveVideo(self):
-        print("save video")
-
-    def transformVideo(self):
+        # self.printCurrentTransform()
         saveDirPath = QFileDialog.getExistingDirectory()
-        tempSaveDirPath = "./videos"
 
-        index = self.videoList.count()
-        for i in range(0, index):
-            videopath = self.videoList.item(i).text()
-            base = os.path.basename(videopath)
+        if self.videoPath:
+            tempSaveDirPath = "./videos"
+            filepath = self.videoPath
+            base = os.path.basename(filepath)
+            savePath = saveDirPath + '/' + self.videoName
+            meta_data = video_info(filepath)
 
             count = 1
-            for t in self.transforms:
-                transform = t.split("_")[0]
-                level = t.split("_")[1]
+            if self.borderIs:
+                print("border")
+
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                # path = tempSaveDirPath + "/" + base + "_" + str(count)
-                meta_data = video_info(videopath)
+                add_border(filepath, path, *meta_data, level="Light")
 
-                if transform == 'border': # 1
-                    add_border(videopath, path, *meta_data, level="Light")
-                elif transform == 'brightness': # 3
-                    if level == 'light':
-                        brightness(videopath, path, *meta_data, level="Light")
-                    elif level == 'medium':
-                        brightness(videopath, path, *meta_data, level="Medium")
-                    elif level == 'heavy':
-                        brightness(videopath, path, *meta_data, level="Heavy")
-                elif transform == 'crop': # 3
-                    if level == 'light':
-                        crop(videopath, path, *meta_data, level="Light")
-                    elif level == 'medium':
-                        crop(videopath, path, *meta_data, level="Medium")
-                    elif level == 'heavy':
-                        crop(videopath, path, *meta_data, level="Heavy")
-                elif transform == 'flip': # 1
-                    flip(videopath, path, *meta_data, level="Light")
-                elif transform == 'format': # 1
-                    format(videopath, path, level="Light")
-                elif transform == 'framerate': # 3
-                    if level == 'light':
-                        framerate(videopath, path, *meta_data, level="Light")
-                    elif level == 'medium':
-                        framerate(videopath, path, *meta_data, level="Medium")
-                    elif level == 'heavy':
-                        framerate(videopath, path, *meta_data, level="Heavy")
-                elif transform == 'grayscale': # 1
-                    grayscale(videopath, path, *meta_data, level="Heavy")
-                elif transform == 'logo': # 3
-                    if level == 'light':
-                        add_logo(videopath, path, *meta_data, level="Light")
-                    elif level == 'medium':
-                        add_logo(videopath, path, *meta_data, level="Medium")
-                    elif level == 'heavy':
-                        add_logo(videopath, path, *meta_data, level="Heavy")
-                elif transform == 'resolution': # 2
-                    if level == 'light':
-                        resolution(videopath, path, *meta_data, level="Light")
-                    elif level == 'medium':
-                        resolution(videopath, path, *meta_data, level="Medium")
-                elif transform == 'rotate': # 1
-                    rotate(videopath, path, *meta_data, level="Light")
+                filepath = path
+                count += 1
+            if self.brightnessIs:
+                print("brightness ffmpeg")
 
-                videopath = path
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                print("path :", path)
+                print("self.brightness :", self.brightness)
+                brightness(filepath, path, level=self.brightness)
+
+                filepath = path
                 count += 1
 
-            base = base.split('.')[0] + "_" + str(count-1) + "." + base.split('.')[1]
-            finalvideoPath = os.path.join(tempSaveDirPath, base)
-            temp = saveDirPath + "/" + base
-            # temp = os.path.join(saveDirPath, base)
-            shutil.copyfile(finalvideoPath, temp)
+            if self.cropIs:
+                print("cropIs ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                crop(filepath, path, *meta_data, level=self.crop)
+
+                filepath = path
+                count += 1
+            if self.flipIs:
+                print("flip ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                flip(filepath, path, *meta_data, level=self.flip)
+
+                filepath = path
+                count += 1
+            if self.formatIs:
+                print("format ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                format(filepath, path, *meta_data, level=self.format)
+
+                filepath = path
+                count += 1
+            if self.framerateIs:
+                print("framerate ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                framerate(filepath, path, *meta_data, level=self.framerate)
+
+                filepath = path
+                count += 1
+            if self.grayscaleIs:
+                print("grayscale ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                grayscale(filepath, path, *meta_data, level='Light')
+
+                filepath = path
+                count += 1
+            if self.addlogoIs:
+                print("addlog ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
+
+                filepath = path
+                count += 1
+            if self.resolutionIs:
+                print("resolution ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                resolution(filepath, path, *meta_data, level=self.resolution)
+
+                filepath = path
+                count += 1
+            if self.rotateIs:
+                print("ratate ffmpeg")
+
+                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+                rotate(filepath, path, *meta_data, level=self.rotate)
+
+                filepath = path
+                count += 1
+
+            finalBase = base
+            temp = saveDirPath + "/" + finalBase
+            base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
+            finalVideoPath = os.path.join(tempSaveDirPath, base)
+            shutil.copyfile(finalVideoPath, temp)
+
 
     def border_change(self):
         self.border = self.borderSlider.value()
@@ -895,12 +932,12 @@ class TagWindow(QDialog, WindowMixin):
     def brightness_change(self):
         self.brightness = int(self.brightnessBox.currentText())
 
-        if self.brightness == 'off' or self.brightness == str(0):
+        if self.brightness == 'off' or self.brightness == 0:
             self.brightnessIs = False
             print("off")
         else:
             self.brightnessIs = True
-            print(self.brightness)
+            self.brightness = int(self.brightness)
 
     def crop_change(self):
         self.crop = self.cropSlider.value() / 1000
@@ -908,7 +945,6 @@ class TagWindow(QDialog, WindowMixin):
             self.cropIs = False
             print("crop OFF")
         else:
-            print("crop :", self.crop)
             self.cropIs = True
 
     def flip_change(self):
@@ -945,6 +981,7 @@ class TagWindow(QDialog, WindowMixin):
                 self.framerateIs = False
             else:
                 self.framerateIs = True
+                self.framerate = int(self.framerate)
 
     def grayscale_change(self):
         radioBtn = self.sender()
@@ -954,6 +991,7 @@ class TagWindow(QDialog, WindowMixin):
                 self.grayscaleIs = False
             else:
                 self.grayscaleIs = True
+                self.grayscale = "Light"
 
     def addlogoX_change(self):
         self.addlogoX = self.addlogoXslider.value()
@@ -992,6 +1030,7 @@ class TagWindow(QDialog, WindowMixin):
                 self.rotateIs = False
             else:
                 self.rotateIs = True
+                self.rotate = int(self.rotate)
 
     def preview(self):
         print("preview")
@@ -1071,24 +1110,101 @@ class TagWindow(QDialog, WindowMixin):
         print("filepath :", filepath)
         try:
             self.transformClear()
-            self.printCurrentTransform()
-            # with open(filepath, 'r') as f:
-            #     json_data = json.load(f)
-            # # print("json_data :", json_data)
-            # transforms = json_data['transforms']
-            #
-            # self.transformList.clear()
-            # self.transforms = []
-            #
-            # for t in transforms:
-            #     # print("t :", t)
-            #     transform = t['transform']
-            #     level = t['level']
-            #
-            #     item = QListWidgetItem()
-            #     item.setText(transform + '_' + level)
-            #     self.transformList.addItem(item)
-            #     self.transforms.append(transform + '_' + level)
+
+            with open(filepath, 'r') as f:
+                json_data = json.load(f)
+            transforms = json_data['transforms']
+
+            for t in transforms:
+                transform = t['transform']
+                level = t['level']
+
+
+                if transform == 'border': # 1
+                    self.borderIs = True
+                    self.border = level
+                    self.borderSlider.setValue(level)
+                elif transform == 'brightness': # 3
+                    self.brightnessIs = True
+                    self.brightness = level
+                    length = len(self.brightnessBox)
+
+                    for i in range(0, length):
+                        if self.brightness == int(self.brightnessBox.itemText(i)):
+                            self.brightnessBox.setCurrentIndex(i)
+                elif transform == 'crop': # 3
+                    self.cropIs = True
+                    self.crop = level * 1000
+
+                    self.cropSlider.setValue(self.crop)
+                elif transform == 'flip': # 1
+                    self.flipIs = True
+                    self.flip = level
+
+                    if self.flip == 'vflip':
+                        self.flipRadioVer.setChecked(True)
+                    elif self.flip == 'hflip':
+                        self.flipRadioHor.setChecked(True)
+                    else:
+                        self.flipRadioOff.setChecked(True)
+                elif transform == 'format': # 1
+                    self.formatIs = True
+                    self.format = level
+
+                    if self.format == '.mp4':
+                        self.formatMp4.setChecked(True)
+                    elif self.format == '.avi':
+                        self.formatAvi.setChecked(True)
+                elif transform == 'framerate': # 3
+                    self.framerateIs = True
+                    self.framerate = level
+
+                    if self.framerate == 5:
+                        self.framerate5.setChecked(True)
+                    elif self.framerate == 10:
+                        self.framerate10.setChecked(True)
+                    elif self.framerate == 20:
+                        self.framerate20.setChecked(True)
+                elif transform == 'grayscale':
+                    self.grayscaleIs = True
+                    self.grayscale = level
+                    self.grayscaleOn.setChecked(True)
+                elif transform == 'addlogo': # 3
+                    self.addlogoIs = True
+                    self.addlogoLevel = level
+                    self.addlogoX = t['location_x']
+                    self.addlogoY = t['location_y']
+
+                    self.addlogoX = int(self.addlogoX.replace('%', ''))
+                    self.addlogoY = int(self.addlogoY.replace('%', ''))
+
+                    length = len(self.logoLevelBox)
+
+                    for i in range(0, length):
+                        if self.addlogoLevel == self.logoLevelBox.itemText(i):
+                            self.logoLevelBox.setCurrentIndex(i)
+
+                    self.addlogoXslider.setValue(self.addlogoX)
+                    self.addlogoYslider.setValue(self.addlogoY)
+                elif transform == 'resolution': # 2
+                    self.resolutionIs = True
+                    self.resolution = level
+
+                    if self.resolution == 'CIF':
+                        self.resolutionCIF.setChecked(True)
+                    elif self.resolution == 'QCIF':
+                        self.resolutionQCIF.setChecked(True)
+                elif transform == 'rotate': # 1
+                    self.rotateIs = True
+                    self.rotate = level
+
+                    if self.rotate == 90:
+                        self.rotate90.setChecked(True)
+                    elif self.rotate == 180:
+                        self.rotate180.setChecked(True)
+                    elif self.rotate == 270:
+                        self.rotate270.setChecked(True)
+
 
         except:
             print("error")
@@ -1115,34 +1231,40 @@ class TagWindow(QDialog, WindowMixin):
         self.grayscaleOn.setChecked(False)
 
         self.logoLevelBox.setCurrentIndex(0)
-        print("1")
         self.addlogoXslider.setValue(0)
         self.addlogoYslider.setValue(0)
-        print("1")
         self.resolutionOff.setChecked(True)
         self.resolutionCIF.setChecked(False)
         self.resolutionQCIF.setChecked(False)
-        print("1")
         self.rotateOff.setChecked(True)
         self.rotate90.setChecked(False)
         self.rotate180.setChecked(False)
         self.rotate270.setChecked(False)
-        print("2")
 
     def printCurrentTransform(self):
-        print("==============")
-        print("border :", self.border)
-        print("brightness :", self.brightness)
-        print("crop :", self.crop)
-        print("flip :", self.flip)
-        print("format :", self.format)
-        print("framerate :", self.framerate)
-        print("grayscale :", self.grayscale)
-        print("addlogo :", self.addlogoLevel)
+        print("==========================")
+        print(f'border : {self.borderIs} / {self.border}')
+
+        print(f'brightness : {self.brightnessIs} / {self.brightness}')
+
+        print(f'crop : {self.cropIs} / {self.crop}')
+
+        print(f'flip : {self.flipIs} / {self.flip}')
+
+        print(f'format : {self.formatIs} / {self.format}')
+
+        print(f'framerate : {self.framerateIs} / {self.framerate}')
+
+        print(f'grayscale : {self.grayscaleIs} / {self.grayscale}')
+
+        print(f'addlogoLevel : {self.addlogoIs} / {self.addlogoLevel}')
         print("logo x :", self.addlogoX)
         print("logo y :", self.addlogoY)
-        print("resolution :", self.resolution)
-        print("rotate :", self.rotate)
+
+        print(f'resolution : {self.resolutionIs} / {self.resolution}')
+
+        print(f'rotate : {self.rotateIs} / {self.rotate}')
+        print("==========================")
 
 
 def videoInfo(filepath):

@@ -9,12 +9,12 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 
 
 res = {
-    'SqCIF': ('128', '96'),
-    'qCIF': ('176', '144'),
-    'CIF': ('352', '288'),
+	'SqCIF': ('128', '96'),
+	'qCIF': ('176', '144'),
+	'CIF': ('352', '288'),
 	'qVGA': ('320', '240'),
-    'VGA': ('640', '480'), # SD, 480p와 동일
-       }
+	'VGA': ('640', '480'), # SD, 480p와 동일
+	}
 
 
 def resolution(inputpath, outputpath, width, height, fps, level='Light'):
@@ -60,13 +60,13 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
 	# crop_rate = random.choice(np.arange(0.5, 0.8, 0.1))
 	# crop_locate = random.choice(np.arange(0.1, 0.25, 0.05))
 
-	crop_locate = None
-	if level == 'Light':
-		crop_locate = 0.025
-	elif level == 'Medium':
-		crop_locate = 0.06
-	elif level == 'Heavy':
-		crop_locate = 0.1
+	crop_locate = level
+	# if level == 'Light':
+	# 	crop_locate = 0.025
+	# elif level == 'Medium':
+	# 	crop_locate = 0.06
+	# elif level == 'Heavy':
+	# 	crop_locate = 0.1
 
 	crop_rate = 1-crop_locate
 
@@ -105,9 +105,12 @@ def video_info(videopath):
 
 
 def add_border(videopath, outputpath, width, height, fps, level='Light'):
-
-	re_width, re_height = res['CIF']
-	width, height = res['VGA']
+	if level == 'VGA':
+		re_width, re_height = res['CIF']
+		width, height = res['VGA']
+	elif level == 'CIF':
+		re_width, re_height = res['qCIF']
+		width, height = res['CIF']
 
 	command = [
 		'ffmpeg', '-y',
@@ -134,22 +137,20 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
 	print("level :", level)
 	if level == 'Light':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'logo_Light', '*')))
+		logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
 	elif level == 'Medium':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'logo_Medium', '*')))
+		logopath = random.choice(glob.glob(os.path.join('logo', 'Medium', '*')))
 	elif level == 'Heavy':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'logo_Heavy', '*')))
+		logopath = random.choice(glob.glob(os.path.join('logo', 'Heavy', '*')))
+
+	logoImg = cv2.imread(logopath, -1)
+	temp_x = logoImg.shape[1]
+	temp_y = logoImg.shape[0]
 
 	# logo_x = width * 0.05
 	# logo_y = height * 0.05
-	print("xlocation :", xlocation)
-	print("ylocation :", ylocation)
-	logo_x = width * xlocation
-	logo_y = height * ylocation
-	print("logo_x :", logo_x)
-	print("logo_y :", logo_y)
-	print("logopath :", logopath)
-
+	logo_x = (width - temp_x) * xlocation
+	logo_y = (height - temp_y) * ylocation
 
 	command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath+ ' -filter_complex "overlay=' + str(logo_x) + ":" + str(logo_y) + '" ' + outputpath
 

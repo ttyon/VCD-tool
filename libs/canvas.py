@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import *
 
 #from PyQt4.QtOpenGL import *
 
-from libs.shape import Shape
 from libs.utils import distance
 
 CURSOR_DEFAULT = Qt.ArrowCursor
@@ -43,7 +42,6 @@ class Canvas(QWidget):
         self.selectedShapeCopy = None
         self.drawingLineColor = QColor(0, 0, 255)
         self.drawingRectColor = QColor(0, 0, 255)
-        self.line = Shape(line_color=self.drawingLineColor)
         self.prevPoint = QPointF()
         self.offsets = QPointF(), QPointF()
         self.scale = 1.0
@@ -142,7 +140,6 @@ class Canvas(QWidget):
                     pos = self.current[0]
                     color = self.current.line_color
                     self.overrideCursor(CURSOR_POINT)
-                    self.current.highlightVertex(0, Shape.NEAR_VERTEX)
 
                 if self.drawSquare:
                     initPos = self.current[0]
@@ -317,8 +314,6 @@ class Canvas(QWidget):
             self.current.addPoint(QPointF(minX, maxY))
             self.finalise()
         elif not self.outOfPixmap(pos):
-            print("pixmap안")
-            self.current = Shape()
             self.current.addPoint(pos)
             self.line.points = [pos, pos]
             self.setHiding()
@@ -491,7 +486,6 @@ class Canvas(QWidget):
         p.translate(self.offsetToCenter())
 
         p.drawPixmap(0, 0, self.pixmap)
-        Shape.scale = self.scale
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and self.isVisible(shape):
                 shape.fill = shape.selected or shape == self.hShape

@@ -12,7 +12,8 @@ res = {
     'qCIF': ('176', '144'),
     'CIF': ('352', '288'),
     'VGA': ('640', '480'), # SD, 480p와 동일
-       }
+    }
+
 
 def resolution(inputpath, outputpath, width, height, fps):
 

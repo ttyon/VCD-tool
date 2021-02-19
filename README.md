@@ -1,7 +1,7 @@
-# Video Copy Detection Transform tool
-- 비디오 crop 및 merge
-- video event annotation 생성 기능
-- 영상 10가지 변환 기능
+# Video Transform tool
+- 10가지 변형에 대해 json option file 생성 및 로드
+- tool 내부에서 변형된 영상 섬네일 간략히 출력
+- cmd 라인을 통한 여러 동영상들 변형 기능
 
 
 ## Requirements

@@ -26,7 +26,6 @@ from toolBar import ToolBar
 
 from libs.canvas import Canvas
 from libs.utils import *
-from libs.hashableQListWidgetItem import *
 from libs.request import Request
 from libs.transforms import *
 from toolBar import ToolButton
@@ -659,21 +658,6 @@ class TagWindow(QDialog):
         self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
 
-        self.previewBtn = QtWidgets.QPushButton()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.previewBtn.sizePolicy().hasHeightForWidth())
-        self.previewBtn.setSizePolicy(sizePolicy)
-        self.previewBtn.setMinimumSize(QtCore.QSize(130, 0))
-        self.previewBtn.setMaximumSize(QtCore.QSize(130, 16777215))
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.previewBtn.setFont(font)
-        self.previewBtn.setObjectName("previewBtn")
-        self.horizontalLayout_12.addWidget(self.previewBtn)
-
         self.saveBtn = QtWidgets.QPushButton()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -750,7 +734,6 @@ class TagWindow(QDialog):
         self.addlogoXslider.valueChanged.connect(self.addlogoX_change)
         self.addlogoYslider.valueChanged.connect(self.addlogoY_change)
 
-        self.previewBtn.clicked.connect(self.preview)
         self.saveBtn.clicked.connect(self.jsonSave)
         self.loadBtn.clicked.connect(self.jsonLoad)
 
@@ -781,7 +764,6 @@ class TagWindow(QDialog):
         self.adjustYLabel.setText(_translate("Dialog", "y:"))
         self.resolutionLabel.setText(_translate("Dialog", "resolution"))
         self.rotateLabel.setText(_translate("Dialog", "rotate"))
-        self.previewBtn.setText(_translate("Dialog", "Priview"))
         self.saveBtn.setText(_translate("Dialog", "Save"))
         self.loadBtn.setText(_translate("Dialog", "Load"))
 
@@ -1159,11 +1141,6 @@ class TagWindow(QDialog):
             data = OrderedDict()
             transformData = []
 
-            if self.borderIs:
-                transform = "border"
-                level = self.border
-                transformData.append({"transform": transform,
-                                      "level": level})
             if self.brightnessIs:
                 transform = "brightness"
                 level = self.brightness
@@ -1194,6 +1171,16 @@ class TagWindow(QDialog):
                 level = "Light"
                 transformData.append({"transform": transform,
                                       "level": level})
+            if self.resolutionIs:
+                transform = "resolution"
+                level = self.resolution
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.rotateIs:
+                transform = "rotate"
+                level = self.rotate
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.addlogoIs:
                 transform = "addlogo"
                 level = self.addlogoLevel
@@ -1203,14 +1190,9 @@ class TagWindow(QDialog):
                                       "level": level,
                                       "location_x": location_x,
                                       "location_y": location_y})
-            if self.resolutionIs:
-                transform = "resolution"
-                level = self.resolution
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.rotateIs:
-                transform = "rotate"
-                level = self.rotate
+            if self.borderIs:
+                transform = "border"
+                level = self.border
                 transformData.append({"transform": transform,
                                       "level": level})
 
@@ -1235,7 +1217,6 @@ class TagWindow(QDialog):
             for t in transforms:
                 transform = t['transform']
                 level = t['level']
-
 
                 if transform == 'border': # 1
                     self.borderIs = True

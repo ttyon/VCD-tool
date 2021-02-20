@@ -856,12 +856,41 @@ class TagWindow(QDialog):
                 # cvImage = cv2.cvtColor(cvImage, cv2.COLOR_RGB2GRAY)
                 # print(cvImage.shape)
             if self.rotateIs:
-                if self.rotate == 90:
-                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
-                elif self.rotate == 180:
-                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
-                elif self.rotate == 270:
-                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                if not self.addlogoIs:
+                    print("저기!")
+                    if self.rotate == 90:
+                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
+                    elif self.rotate == 180:
+                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
+                    elif self.rotate == 270:
+                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                else:
+                    print("여기!")
+
+                    if self.rotate == 90:
+                        temp_w = int(self.heightLabel.text())
+                        temp_h = int(self.widthLabel.text())
+                    elif self.rotate == 180:
+                        temp_w = int(self.widthLabel.text())
+                        temp_h = int(self.heightLabel.text())
+                    elif self.rotate == 270:
+                        temp_w = int(self.heightLabel.text())
+                        temp_h = int(self.widthLabel.text())
+
+                    logoImg = cv2.imread(self.logoPath)
+                    logo_w = logoImg.shape[1]
+                    logo_h = logoImg.shape[0]
+
+                    if temp_w > logo_w and temp_h > logo_h:
+                        if self.rotate == 90:
+                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
+                        elif self.rotate == 180:
+                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
+                        elif self.rotate == 270:
+                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                    else:
+                        self.rotateIs = False
+                        self.rotateOff.setChecked(True)
             if self.addlogoIs:
                 logoImg = cv2.imread(self.logoPath, -1)
                 dst = cvImage.copy()
@@ -1156,11 +1185,6 @@ class TagWindow(QDialog):
                 level = self.flip
                 transformData.append({"transform": transform,
                                       "level": level})
-            if self.formatIs:
-                transform = "format"
-                level = self.format
-                transformData.append({"transform": transform,
-                                      "level": level})
             if self.framerateIs:
                 transform = "framerate"
                 level = self.framerate
@@ -1193,6 +1217,11 @@ class TagWindow(QDialog):
             if self.borderIs:
                 transform = "border"
                 level = self.border
+                transformData.append({"transform": transform,
+                                      "level": level})
+            if self.formatIs:
+                transform = "format"
+                level = self.format
                 transformData.append({"transform": transform,
                                       "level": level})
 

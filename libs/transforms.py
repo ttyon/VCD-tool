@@ -75,7 +75,10 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
 	crop_x = width * crop_locate
 	crop_y = height * crop_locate
 
+	print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
+
 	command = 'ffmpeg -y -i ' + inputpath + ' -filter:v "crop= ' + str(crop_width) + ':' + str(crop_height) + ':' + str(crop_x) + ':' + str(crop_y) + '" ' + outputpath
+	print("command :", command)
 	subprocess.call(command, shell=True)
 
 

@@ -1,11 +1,13 @@
 import argparse
 import json
 import shutil
+import signal
 import subprocess
 import os
 import cv2
 import random
 import glob
+import time
 import numpy as np
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
@@ -34,6 +36,7 @@ def resolution(inputpath, outputpath, width, height, fps, level='Light'):
         '-vf', 'scale=' + str(re_width) + ':' + str(re_height),
         outputpath
     ]
+    # os.system(command)
     subprocess.run(command)
 
 
@@ -41,6 +44,7 @@ def framerate(inputpath, outputpath, width, height, fps, level='Light'):
     re_fps = level
 
     command = 'ffmpeg -y -i ' + inputpath + ' -vf "setpts=1.25*PTS" -r ' + str(re_fps) + ' ' + outputpath
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
@@ -49,13 +53,14 @@ def format(inputpath, outputpath, level='Light'):
         new_ext = '.mp4'
     else:
         new_ext = '.avi'
-    outputpath = outputpath + new_ext
+    # outputpath = outputpath + new_ext
     command = ''
     if new_ext == '.avi':
         command = 'ffmpeg -y -i ' + inputpath + ' -ar 22050 -b 2048k ' + outputpath
     elif new_ext == '.mp4':
         command = 'ffmpeg -y -i ' + inputpath + ' ' + outputpath
     # command = 'ffmpeg -y -i ' + inputpath + ' -codec copy ' + outputpath
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
@@ -63,7 +68,7 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
     # crop_rate = random.choice(np.arange(0.5, 0.8, 0.1))
     # crop_locate = random.choice(np.arange(0.1, 0.25, 0.05))
 
-    crop_locate = level
+    crop_locate = level / 1000
     # if level == 'Light':
     # 	crop_locate = 0.025
     # elif level == 'Medium':
@@ -78,8 +83,12 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
     crop_x = width * crop_locate
     crop_y = height * crop_locate
 
+    print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
+
     command = 'ffmpeg -y -i ' + inputpath + ' -filter:v "crop= ' + str(crop_width) + ':' + str(crop_height) + ':' + str(
         crop_x) + ':' + str(crop_y) + '" ' + outputpath
+    print("command :", command)
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
@@ -93,6 +102,7 @@ def rotate(inputpath, outputpath, width, height, fps, level='Light'):
     # rotate_list = ['"transpose=1"', '"transpose=2"', '"transpose=2,transpose=2"']
     # transpose = random.choice(rotate_list)
     command = 'ffmpeg -y -i ' + inputpath + ' -vf ' + transpose + ' ' + outputpath
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
@@ -128,6 +138,8 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
               'temp.flv' + \
               ' -vf "scale=\'min(' + width + ',iw)\':min\'(' + height + ',ih)\':force_original_aspect_ratio=decrease,pad=' + width + ':' + height + ':(ow-iw)/2:(oh-ih)/2" ' + \
               outputpath
+
+    # os.system(command)
     subprocess.call(command, shell=True)
 # command = 'ffmpeg -y -i ' + \
 # 		  outputpath + \
@@ -159,15 +171,15 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
         logo_y) + '" ' + outputpath
 
     print("command :", command)
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
 def brightness(videopath, outputpath, level):
-    print("level :", level)
     rate = level / 100
-    print("rate :", rate)
 
     command = 'ffmpeg -y -i ' + videopath + ' -vf eq=brightness=' + str(rate) + ' -c:a copy ' + outputpath
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
@@ -177,20 +189,29 @@ def flip(videopath, outputpath, width, height, fps, level='Light'):
     else:
         command = 'ffmpeg -y -i ' + videopath + ' -filter:v "vflip" -c:a copy ' + outputpath
 
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
 def grayscale(videopath, outputpath, width, height, fps, level='Light'):
     command = 'ffmpeg -y -i ' + videopath + ' -vf format=gray ' + outputpath
+    # os.system(command)
     subprocess.call(command, shell=True)
 
 
 def transform_videos(vid_path, save_path, json_path):
+
+    if not os.path.isdir("./videos"):
+        os.makedirs("./videos")
+
+    formatIs = False
+    formatLevel = None
+
     filepath = vid_path
-    tempSaveDirPath = "./videos"
-    finalSavePath = save_path + '\\' + os.path.basename(vid_path)
-    base = os.path.basename(vid_path)
-    meta_data = video_info(vid_path)
+    filebase = os.path.basename(filepath)
+    tempSaveDirPath = "./videos/"
+    finalSavePath = save_path + '/' + os.path.basename(vid_path)
+    # meta_data = video_info(vid_path)
     count = 1
 
     with open(json_path, 'r') as f:
@@ -201,101 +222,99 @@ def transform_videos(vid_path, save_path, json_path):
         transform = t['transform']
         level = t['level']
 
+        print("fffilepath :", filepath)
+        meta_data = video_info(filepath)
+
         if transform == 'brightness':  # 3
             brightness_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("brightness path :", path)
             brightness(filepath, path, level=brightness_level)
-            filepath = path
-            count += 1
-            print("brightness")
         elif transform == 'crop':  # 3
             crop_level = level * 1000
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("crop path :", path)
             crop(filepath, path, *meta_data, level=crop_level)
-
-            filepath = path
-            count += 1
-            print("crop")
         elif transform == 'flip':  # 1
             flip_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("flip path :", path)
             flip(filepath, path, *meta_data, level=flip_level)
-            filepath = path
-            count += 1
-            print("flip")
-        elif transform == 'format':  # 1
-            format_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            format(filepath, path, *meta_data, level=format_level)
-            filepath = path
-            count += 1
-            print("format")
         elif transform == 'framerate':  # 3
             framerate_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("framerate path :", path)
             framerate(filepath, path, *meta_data, level=framerate_level)
-            filepath = path
-            count += 1
-            print("framerate")
         elif transform == 'grayscale':
             grayscale_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("grayscale path :", path)
             grayscale(filepath, path, *meta_data, level='Light')
-            filepath = path
-            count += 1
-            print("grayscale")
         elif transform == 'resolution':  # 2
             resolution_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("resolution path :", path)
             resolution(filepath, path, *meta_data, level=resolution_level)
-            filepath = path
-            count += 1
-            print("resolution")
         elif transform == 'rotate':  # 1
             rotate_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("rotate path :", path)
             rotate(filepath, path, *meta_data, level=rotate_level)
-            filepath = path
-            count += 1
-            print("rotate")
         elif transform == 'addlogo':  # 3
-            print("왜 안 됨?")
             addlogo_level = level
             addlogo_x = int(t['location_x'].replace('%', ''))
             addlogo_y = int(t['location_y'].replace('%', ''))
 
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("addlogo path :", path)
             add_logo(filepath, path, *meta_data, addlogo_x / 100, addlogo_y / 100, level=addlogo_level)
-
-            filepath = path
-            count += 1
-            print("addlogo")
         elif transform == 'border':  # 1
             border_level = level
-            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            # path = os.path.join(tempSaveDirPath, filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1])
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
+            print("border path :", path)
             add_border(filepath, path, *meta_data, level=border_level)
-            filepath = path
-            count += 1
-            print("border")
+        elif transform == 'format':  # 1
+            format_level = level
+            path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1] + format_level
+            print("format path :", path)
+            print("format_level :", format_level)
+            format(filepath, path, level=format_level)
 
-        base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
-        finalVideoPath = os.path.join(tempSaveDirPath, base)
-        print("finalVideoPath :", finalVideoPath)
-        print("finalSavePath :", finalSavePath)
-        shutil.copyfile(finalVideoPath, finalSavePath)
+            formatIs = True
+            formatLevel = format_level
+
+        filepath = path
+        count += 1
+
+    if formatIs:
+        base = filebase.split('.')[0] + "_" + str(count - 1) + "." + filebase.split('.')[1] + formatLevel
+        finalVideoPath = tempSaveDirPath + base
+
+        finalSavePath = finalSavePath + formatLevel
+    else:
+        base = filebase.split('.')[0] + "_" + str(count - 1) + "." + filebase.split('.')[1]
+        finalVideoPath = tempSaveDirPath + base
+
+    shutil.copyfile(finalVideoPath, finalSavePath)
 
 
 parser = argparse.ArgumentParser(description='transform videos')
 
-parser.add_argument('--video_dir_path', required=True, help="video directory path")
-parser.add_argument('--save_dir_path', required=True, help="save directory path")
-parser.add_argument('--json_file_path', required=True, help="json file path")
+parser.add_argument('--video_dir_path', required=False, default="C:/Users/jslee/Desktop/VCDB", help="video directory path")
+parser.add_argument('--save_dir_path', required=False, default="C:/Users/jslee/Desktop/vvv", help="save directory path")
+parser.add_argument('--json_file_path', required=False, default="C:/Users/jslee/ttyon/VCD-tool/test/realfinaltest.json", help="json file path")
 
 args = parser.parse_args()
 video_dir_path = args.video_dir_path
 save_dir_path = args.save_dir_path
 json_file_path = args.json_file_path
 
+video_dir_path = video_dir_path.replace("\\", "/")
+save_dir_path = save_dir_path.replace("\\", "/")
+json_file_path = json_file_path.replace("\\", "/")
+
 for vid in os.listdir(video_dir_path):
     vid_path = os.path.join(video_dir_path, vid)
     transform_videos(vid_path, save_dir_path, json_file_path)
+

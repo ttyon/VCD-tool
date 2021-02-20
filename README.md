@@ -6,15 +6,10 @@
 
 ### 요구사항
 
-* Ubuntu 16.04/18.04
-
-* CUDA 9.2/10.1
+* ffmpeg 4.3.1
 
 * Python 3.6
 
-* cuDNN 7.x
-
-* GCC 4.9 이상
 
 # Video Transform tool
 - 10가지 변형에 대해 json option file 생성 및 로드

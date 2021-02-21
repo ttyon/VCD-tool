@@ -23,12 +23,13 @@ git clone https://github.com/ttyon/VCD-tool.git
 ```
 conda create -n [VideoTransform] python=3.6 -y (가상 환경 이름은 사용자 마음대로)
 conda activate [VideoTransform]
+cd [프로그램 경로]                           ex) cd C:/Users/jslee/Desktop/VCD-tool
 pip install -r requirements.txt
 ```
  
 ### 프로그램 실행 방법
 ```
-cd [프로그램 경로]                    ex) cd C:/Users/jslee/Desktop/VCD-tool
+cd [프로그램 경로]                           ex) cd C:/Users/jslee/Desktop/VCD-tool
 conda activate [VideoTransform]
 python app.py
 ```
@@ -112,6 +113,12 @@ usage: transform_videos.py [-h] --video_dir_path VIDEO_DIR_PATH \
                            --json_file_path JSON_FILE_PATH 
 
 ex) python transform_videos.py --video_dir_path [변형할 비디오 디렉토리 경로] --save_dir_path [변형된 비디오 저장 디렉토리 경로] --json_file_path [json option 파일 경로]
+```
+
+```
+프로젝트 내의 videos 폴더에 여러 가지 변형들이 적용된 동영상들이 있습니다. 해당 videos 폴더를 삭제하지 말아주세요.
+프로젝트 내의 각 변형이 적용된 영상들이 필요 없다면
+python deletevideos.py 를 실행하세요.
 ```
 
  

@@ -16,7 +16,7 @@
 ### 프로그램 다운로드
 ```
 cd [프로그램 다운 받을 디렉토리 경로]          ex) cd C:/Users/jslee/Desktop
-git clone https://github.com/stonehye/qt-segmentation-tool.git
+git clone https://github.com/ttyon/VCD-tool.git
 ```
 
 ### conda 가상 환경 구성

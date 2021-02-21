@@ -23,12 +23,13 @@ git clone https://github.com/ttyon/VCD-tool.git
 ```
 conda create -n [VideoTransform] python=3.6 -y (가상 환경 이름은 사용자 마음대로)
 conda activate [VideoTransform]
+cd [프로그램 경로]                           ex) cd C:/Users/jslee/Desktop/VCD-tool
 pip install -r requirements.txt
 ```
  
 ### 프로그램 실행 방법
 ```
-cd [프로그램 경로]                    ex) cd C:/Users/jslee/Desktop/VCD-tool
+cd [프로그램 경로]                           ex) cd C:/Users/jslee/Desktop/VCD-tool
 conda activate [VideoTransform]
 python app.py
 ```

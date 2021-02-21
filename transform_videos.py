@@ -301,9 +301,12 @@ def transform_videos(vid_path, save_path, json_path):
 
 parser = argparse.ArgumentParser(description='transform videos')
 
-parser.add_argument('--video_dir_path', required=False, default="C:/Users/jslee/Desktop/VCDB", help="video directory path")
-parser.add_argument('--save_dir_path', required=False, default="C:/Users/jslee/Desktop/vvv", help="save directory path")
-parser.add_argument('--json_file_path', required=False, default="C:/Users/jslee/ttyon/VCD-tool/test/realfinaltest.json", help="json file path")
+# parser.add_argument('--video_dir_path', required=False, default="C:/Users/jslee/Desktop/VCDB", help="video directory path")
+# parser.add_argument('--save_dir_path', required=False, default="C:/Users/jslee/Desktop/vvv", help="save directory path")
+# parser.add_argument('--json_file_path', required=False, default="C:/Users/jslee/ttyon/VCD-tool/test/realfinaltest.json", help="json file path")
+parser.add_argument('--video_dir_path', required=True, help="video directory path")
+parser.add_argument('--save_dir_path', required=True, help="save directory path")
+parser.add_argument('--json_file_path', required=True, help="json file path")
 
 args = parser.parse_args()
 video_dir_path = args.video_dir_path

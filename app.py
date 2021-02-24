@@ -857,7 +857,6 @@ class TagWindow(QDialog):
                 # print(cvImage.shape)
             if self.rotateIs:
                 if not self.addlogoIs:
-                    print("저기!")
                     if self.rotate == 90:
                         cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
                     elif self.rotate == 180:
@@ -865,8 +864,6 @@ class TagWindow(QDialog):
                     elif self.rotate == 270:
                         cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 else:
-                    print("여기!")
-
                     if self.rotate == 90:
                         temp_w = int(self.heightLabel.text())
                         temp_h = int(self.widthLabel.text())
@@ -950,82 +947,61 @@ class TagWindow(QDialog):
             count = 1
 
             if self.brightnessIs:
-                print("brightness ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                print("path :", path)
-                print("self.brightness :", self.brightness)
+
                 brightness(filepath, path, level=self.brightness)
 
                 filepath = path
                 count += 1
             if self.cropIs:
-                print("cropIs ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 crop(filepath, path, *meta_data, level=self.crop)
 
                 filepath = path
                 count += 1
             if self.flipIs:
-                print("flip ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 flip(filepath, path, *meta_data, level=self.flip)
 
                 filepath = path
                 count += 1
             if self.formatIs:
-                print("format ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 format(filepath, path, *meta_data, level=self.format)
 
                 filepath = path
                 count += 1
             if self.framerateIs:
-                print("framerate ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 framerate(filepath, path, *meta_data, level=self.framerate)
 
                 filepath = path
                 count += 1
             if self.grayscaleIs:
-                print("grayscale ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 grayscale(filepath, path, *meta_data, level='Light')
 
                 filepath = path
                 count += 1
             if self.resolutionIs:
-                print("resolution ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 resolution(filepath, path, *meta_data, level=self.resolution)
 
                 filepath = path
                 count += 1
             if self.rotateIs:
-                print("ratate ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 rotate(filepath, path, *meta_data, level=self.rotate)
 
                 filepath = path
                 count += 1
             if self.addlogoIs:
-                print("addlog ffmpeg")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
 
                 filepath = path
                 count += 1
             if self.borderIs:
-                print("border")
-
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 add_border(filepath, path, *meta_data, level=self.border)
 
@@ -1055,7 +1031,6 @@ class TagWindow(QDialog):
 
         if self.brightness == 'off' or self.brightness == 0:
             self.brightnessIs = False
-            print("off")
         else:
             self.brightnessIs = True
             self.brightness = int(self.brightness)
@@ -1063,7 +1038,7 @@ class TagWindow(QDialog):
         self.preview()
 
     def crop_change(self):
-        self.crop = self.cropSlider.value() / 1000
+        self.crop = self.cropSlider.value() / 1000 * 5 # 0.5 까지 조절 가능하도록
         if self.crop == 0:
             self.cropIs = False
         else:
@@ -1137,7 +1112,6 @@ class TagWindow(QDialog):
         else:
             self.addlogoIs = True
             self.logoPath = random.choice(glob.glob(os.path.join('.\\', 'logo', self.addlogoLevel, '*')))
-            print("self.logoPath :", self.logoPath)
         self.preview()
 
     def resolution_change(self):
@@ -1235,7 +1209,6 @@ class TagWindow(QDialog):
     def jsonLoad(self):
         filepath, _ = QFileDialog.getOpenFileName(self, "Load Option File", ".", "Json files (*.json)")
 
-        print("filepath :", filepath)
         try:
             self.transformClear()
 

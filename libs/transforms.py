@@ -71,14 +71,12 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
 	crop_rate = 1-crop_locate
 
 	crop_width = width * crop_rate
-	crop_height = height *crop_rate
-	crop_x = width * crop_locate
-	crop_y = height * crop_locate
-
-	print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
+	crop_height = height * crop_rate
+	crop_x = width * crop_locate / 2
+	crop_y = height * crop_locate / 2
+	# print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
 
 	command = 'ffmpeg -y -i ' + inputpath + ' -filter:v "crop= ' + str(crop_width) + ':' + str(crop_height) + ':' + str(crop_x) + ':' + str(crop_y) + '" ' + outputpath
-	print("command :", command)
 	subprocess.call(command, shell=True)
 
 
@@ -138,7 +136,6 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 
 
 def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
-	print("level :", level)
 	if level == 'Light':
 		logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
 	elif level == 'Medium':
@@ -157,14 +154,11 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
 
 	command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath+ ' -filter_complex "overlay=' + str(logo_x) + ":" + str(logo_y) + '" ' + outputpath
 
-	print("command :", command)
 	subprocess.call(command, shell=True)
 
 
 def brightness(videopath, outputpath, level):
-	print("level :", level)
 	rate = level / 100
-	print("rate :", rate)
 
 	command = 'ffmpeg -y -i ' + videopath +' -vf eq=brightness=' + str(rate) + ' -c:a copy ' + outputpath
 	subprocess.call(command, shell=True)
@@ -187,10 +181,8 @@ def grayscale(videopath, outputpath, width, height, fps, level='Light'):
 def main(level, dataset_path):
 	video_list = glob.glob(os.path.join(dataset_path, 'original_SD', '*')) # 원형 비디오셋 저장 경로
 
-	print("len :", len(video_list))
 	for videopath in video_list:
 		base = os.path.basename(videopath)
-		print("base :",base)
 		video, ext = base.split('.')
 		meta_data = video_info(videopath)
 

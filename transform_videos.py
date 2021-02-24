@@ -80,14 +80,14 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
 
     crop_width = width * crop_rate
     crop_height = height * crop_rate
-    crop_x = width * crop_locate
-    crop_y = height * crop_locate
-
-    print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
+    crop_x = width * crop_locate / 2
+    crop_y = height * crop_locate / 2
+    #
+    # print(f"crop_width : {crop_width}, crop_height : {crop_height}, crop_x : {crop_x}, crop_y : {crop_y}")
 
     command = 'ffmpeg -y -i ' + inputpath + ' -filter:v "crop= ' + str(crop_width) + ':' + str(crop_height) + ':' + str(
         crop_x) + ':' + str(crop_y) + '" ' + outputpath
-    print("command :", command)
+
     # os.system(command)
     subprocess.call(command, shell=True)
 
@@ -150,7 +150,6 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 
 
 def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
-    print("level :", level)
     if level == 'Light':
         logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
     elif level == 'Medium':
@@ -170,7 +169,6 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
     command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath + ' -filter_complex "overlay=' + str(logo_x) + ":" + str(
         logo_y) + '" ' + outputpath
 
-    print("command :", command)
     # os.system(command)
     subprocess.call(command, shell=True)
 
@@ -222,43 +220,42 @@ def transform_videos(vid_path, save_path, json_path):
         transform = t['transform']
         level = t['level']
 
-        print("fffilepath :", filepath)
         meta_data = video_info(filepath)
 
         if transform == 'brightness':  # 3
             brightness_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("brightness path :", path)
+            # print("brightness path :", path)
             brightness(filepath, path, level=brightness_level)
         elif transform == 'crop':  # 3
             crop_level = level * 1000
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("crop path :", path)
+            # print("crop path :", path)
             crop(filepath, path, *meta_data, level=crop_level)
         elif transform == 'flip':  # 1
             flip_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("flip path :", path)
+            # print("flip path :", path)
             flip(filepath, path, *meta_data, level=flip_level)
         elif transform == 'framerate':  # 3
             framerate_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("framerate path :", path)
+            # print("framerate path :", path)
             framerate(filepath, path, *meta_data, level=framerate_level)
         elif transform == 'grayscale':
             grayscale_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("grayscale path :", path)
+            # print("grayscale path :", path)
             grayscale(filepath, path, *meta_data, level='Light')
         elif transform == 'resolution':  # 2
             resolution_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("resolution path :", path)
+            # print("resolution path :", path)
             resolution(filepath, path, *meta_data, level=resolution_level)
         elif transform == 'rotate':  # 1
             rotate_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("rotate path :", path)
+            # print("rotate path :", path)
             rotate(filepath, path, *meta_data, level=rotate_level)
         elif transform == 'addlogo':  # 3
             addlogo_level = level
@@ -266,19 +263,19 @@ def transform_videos(vid_path, save_path, json_path):
             addlogo_y = int(t['location_y'].replace('%', ''))
 
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("addlogo path :", path)
+            # print("addlogo path :", path)
             add_logo(filepath, path, *meta_data, addlogo_x / 100, addlogo_y / 100, level=addlogo_level)
         elif transform == 'border':  # 1
             border_level = level
             # path = os.path.join(tempSaveDirPath, filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1])
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
-            print("border path :", path)
+            # print("border path :", path)
             add_border(filepath, path, *meta_data, level=border_level)
         elif transform == 'format':  # 1
             format_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1] + format_level
-            print("format path :", path)
-            print("format_level :", format_level)
+            # print("format path :", path)
+            # print("format_level :", format_level)
             format(filepath, path, level=format_level)
 
             formatIs = True

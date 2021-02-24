@@ -38,9 +38,13 @@ python app.py
 ### 변형 option file 생성
 
 <img width="926" alt="KakaoTalk_20200923_174424241" src="https://user-images.githubusercontent.com/46225226/108618700-8f518200-7463-11eb-943a-18dfea4e5bf6.png">
+
 #### 1. 변형의 예시를 보기 위해 'Open Video'를 통해 비디오를 선택
+
 #### 2. 변형이 된  동영상 예시 섬네일 출력
+
 #### 3. 원본 동영상 파일의 정보 출력
+
 #### 4. 10가지 변형에 대하여 level 사용자화 가능
 
 ```

@@ -115,6 +115,24 @@ video 들이 저장되어 있는 디렉토리의 구성 (--video_dir_path의 형
 usage: transform_videos.py [-h] --video_dir_path VIDEO_DIR_PATH \
                            --save_dir_path SAVE_DIR_PATH \
                            --json_file_path JSON_FILE_PATH 
+                           
+변환된 video들과 annotation들이 저장되어 있는 디렉토리의 구성 (--video_dir_path의 형태)
+(DIRECTORY)
+├── aaa.flv
+├── aaa.flv.json
+├── bbb.flv
+├── bbb.flv.json
+├── ccc.flv
+├── ccc.flv.json
+├── ddd.flv
+├── ddd.flv.json
+├── eee.flv
+├── eee.flv.json
+├── fff.flv
+├── fff.flv.json
+├── ...
+├── fff.flv
+└── fff.flv.json
 
 ex) python transform_videos.py --video_dir_path [변형할 비디오 디렉토리 경로] --save_dir_path [변형된 비디오 저장 디렉토리 경로] --json_file_path [json option 파일 경로]
 ```

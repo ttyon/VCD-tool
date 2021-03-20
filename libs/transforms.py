@@ -136,14 +136,22 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 
 
 def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
-	if level == 'Light':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
-	elif level == 'Medium':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'Medium', '*')))
-	elif level == 'Heavy':
-		logopath = random.choice(glob.glob(os.path.join('logo', 'Heavy', '*')))
+	# if level == 'Light':
+	# 	logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
+	# elif level == 'Medium':
+	# 	logopath = random.choice(glob.glob(os.path.join('logo', 'Medium', '*')))
+	# elif level == 'Heavy':
+	# 	logopath = random.choice(glob.glob(os.path.join('logo', 'Heavy', '*')))
+
+	logopath = random.choice(glob.glob(os.path.join('.\\', 'logo', '*')))
 
 	logoImg = cv2.imread(logopath, -1)
+	level = int(level.replace('%', '')) / 100
+	new_w = int(int(width) * level)
+	new_h = int(int(height) * level)
+	logoImg = cv2.resize(logoImg, dsize=(new_w, new_h), interpolation=cv2.INTER_AREA)
+	cv2.imwrite('./temp.png', logoImg)
+
 	temp_x = logoImg.shape[1]
 	temp_y = logoImg.shape[0]
 
@@ -152,9 +160,12 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
 	logo_x = (width - temp_x) * xlocation
 	logo_y = (height - temp_y) * ylocation
 
-	command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath+ ' -filter_complex "overlay=' + str(logo_x) + ":" + str(logo_y) + '" ' + outputpath
+	# command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath+ ' -filter_complex "overlay=' + str(logo_x) + ":" + str(logo_y) + '" ' + outputpath
+	command = 'ffmpeg -y -i ' + videopath + ' -i ./temp.png -filter_complex "overlay=' + str(logo_x) + ":" + str(
+		logo_y) + '" ' + outputpath
 
 	subprocess.call(command, shell=True)
+	os.remove('./temp.png')
 
 
 def brightness(videopath, outputpath, level):

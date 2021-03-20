@@ -7,6 +7,7 @@ import os
 import cv2
 import random
 import glob
+from collections import OrderedDict
 import time
 import numpy as np
 
@@ -150,14 +151,22 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
 
 
 def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, level='Light'):
-    if level == 'Light':
-        logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
-    elif level == 'Medium':
-        logopath = random.choice(glob.glob(os.path.join('logo', 'Medium', '*')))
-    elif level == 'Heavy':
-        logopath = random.choice(glob.glob(os.path.join('logo', 'Heavy', '*')))
+    # if level == 'Light':
+    #     logopath = random.choice(glob.glob(os.path.join('logo', 'Light', '*')))
+    # elif level == 'Medium':
+    #     logopath = random.choice(glob.glob(os.path.join('logo', 'Medium', '*')))
+    # elif level == 'Heavy':
+    #     logopath = random.choice(glob.glob(os.path.join('logo', 'Heavy', '*')))
+
+    logopath = random.choice(glob.glob(os.path.join('.\\', 'logo', '*')))
 
     logoImg = cv2.imread(logopath, -1)
+    level = int(level.replace('%', '')) / 100
+    new_w = int(int(width) * level)
+    new_h = int(int(height) * level)
+    logoImg = cv2.resize(logoImg, dsize=(new_w, new_h), interpolation=cv2.INTER_AREA)
+    cv2.imwrite('./temp.png', logoImg)
+
     temp_x = logoImg.shape[1]
     temp_y = logoImg.shape[0]
 
@@ -216,6 +225,10 @@ def transform_videos(vid_path, save_path, json_path):
         json_data = json.load(f)
     transforms = json_data['transforms']
 
+    data = OrderedDict()
+    data["video_name"] = filebase
+    transformData = []
+
     for t in transforms:
         transform = t['transform']
         level = t['level']
@@ -227,36 +240,57 @@ def transform_videos(vid_path, save_path, json_path):
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("brightness path :", path)
             brightness(filepath, path, level=brightness_level)
+            json_transform = "brightness"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'crop':  # 3
             crop_level = level * 1000
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("crop path :", path)
             crop(filepath, path, *meta_data, level=crop_level)
+            json_transform = "crop"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'flip':  # 1
             flip_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("flip path :", path)
             flip(filepath, path, *meta_data, level=flip_level)
+            json_transform = "flip"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'framerate':  # 3
             framerate_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("framerate path :", path)
             framerate(filepath, path, *meta_data, level=framerate_level)
+            json_transform = "framerate"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'grayscale':
             grayscale_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("grayscale path :", path)
             grayscale(filepath, path, *meta_data, level='Light')
+            json_transform = "grayscale"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'resolution':  # 2
             resolution_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("resolution path :", path)
             resolution(filepath, path, *meta_data, level=resolution_level)
+            json_transform = "resolution"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'rotate':  # 1
             rotate_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("rotate path :", path)
             rotate(filepath, path, *meta_data, level=rotate_level)
+            json_transform = "rotate"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'addlogo':  # 3
             addlogo_level = level
             addlogo_x = int(t['location_x'].replace('%', ''))
@@ -265,12 +299,18 @@ def transform_videos(vid_path, save_path, json_path):
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("addlogo path :", path)
             add_logo(filepath, path, *meta_data, addlogo_x / 100, addlogo_y / 100, level=addlogo_level)
+            json_transform = "addlogo"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'border':  # 1
             border_level = level
             # path = os.path.join(tempSaveDirPath, filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1])
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1]
             # print("border path :", path)
             add_border(filepath, path, *meta_data, level=border_level)
+            json_transform = "border"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
         elif transform == 'format':  # 1
             format_level = level
             path = tempSaveDirPath + filebase.split('.')[0] + "_" + str(count) + "." + filebase.split('.')[1] + format_level
@@ -278,11 +318,17 @@ def transform_videos(vid_path, save_path, json_path):
             # print("format_level :", format_level)
             format(filepath, path, level=format_level)
 
+            json_transform = "format"
+            transformData.append({"transform": json_transform,
+                                  "level": level})
+
             formatIs = True
             formatLevel = format_level
 
         filepath = path
         count += 1
+
+    finalBase = filebase
 
     if formatIs:
         base = filebase.split('.')[0] + "_" + str(count - 1) + "." + filebase.split('.')[1] + formatLevel

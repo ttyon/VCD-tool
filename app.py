@@ -534,7 +534,8 @@ class TagWindow(QDialog):
         self.logoLayout.setObjectName("logoLayout")
 
         self.logoLevelBox = QComboBox()
-        self.logoLevelBox.addItems(["off", "Light", "Medium", "Heavy"])
+        # self.logoLevelBox.addItems(["off", "Light", "Medium", "Heavy"])
+        self.logoLevelBox.addItems(["off", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%"])
 
         self.addlogoLabel = QtWidgets.QLabel()
         font = QtGui.QFont()
@@ -658,6 +659,21 @@ class TagWindow(QDialog):
         self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
 
+        self.logoChangeBtn = QtWidgets.QPushButton()
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.logoChangeBtn.sizePolicy().hasHeightForWidth())
+        self.logoChangeBtn.setSizePolicy(sizePolicy)
+        self.logoChangeBtn.setMinimumSize(QtCore.QSize(130, 0))
+        self.logoChangeBtn.setMaximumSize(QtCore.QSize(130, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.logoChangeBtn.setFont(font)
+        self.logoChangeBtn.setObjectName("loadBtn")
+        self.horizontalLayout_12.addWidget(self.logoChangeBtn)
+
         self.saveBtn = QtWidgets.QPushButton()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -734,6 +750,7 @@ class TagWindow(QDialog):
         self.addlogoXslider.valueChanged.connect(self.addlogoX_change)
         self.addlogoYslider.valueChanged.connect(self.addlogoY_change)
 
+        self.logoChangeBtn.clicked.connect(self.logoChange)
         self.saveBtn.clicked.connect(self.jsonSave)
         self.loadBtn.clicked.connect(self.jsonLoad)
 
@@ -764,8 +781,9 @@ class TagWindow(QDialog):
         self.adjustYLabel.setText(_translate("Dialog", "y:"))
         self.resolutionLabel.setText(_translate("Dialog", "resolution"))
         self.rotateLabel.setText(_translate("Dialog", "rotate"))
-        self.saveBtn.setText(_translate("Dialog", "Save"))
-        self.loadBtn.setText(_translate("Dialog", "Load"))
+        self.saveBtn.setText(_translate("Dialog", "Json\nDump"))
+        self.loadBtn.setText(_translate("Dialog", "Json\nLoad"))
+        self.logoChangeBtn.setText(_translate("Dialog", "Logo\nChange"))
 
     def openVideo(self):
         filepath, _ = QFileDialog.getOpenFileName(self, 'Choose video', '.', "Video Files (*.avi *.mp4 *.flv)")
@@ -856,45 +874,64 @@ class TagWindow(QDialog):
                 # cvImage = cv2.cvtColor(cvImage, cv2.COLOR_RGB2GRAY)
                 # print(cvImage.shape)
             if self.rotateIs:
-                if not self.addlogoIs:
-                    if self.rotate == 90:
-                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
-                    elif self.rotate == 180:
-                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
-                    elif self.rotate == 270:
-                        cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                else:
-                    if self.rotate == 90:
-                        temp_w = int(self.heightLabel.text())
-                        temp_h = int(self.widthLabel.text())
-                    elif self.rotate == 180:
-                        temp_w = int(self.widthLabel.text())
-                        temp_h = int(self.heightLabel.text())
-                    elif self.rotate == 270:
-                        temp_w = int(self.heightLabel.text())
-                        temp_h = int(self.widthLabel.text())
-
-                    logoImg = cv2.imread(self.logoPath)
-                    logo_w = logoImg.shape[1]
-                    logo_h = logoImg.shape[0]
-
-                    if temp_w > logo_w and temp_h > logo_h:
-                        if self.rotate == 90:
-                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
-                        elif self.rotate == 180:
-                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
-                        elif self.rotate == 270:
-                            cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                    else:
-                        self.rotateIs = False
-                        self.rotateOff.setChecked(True)
+                # logo level로 했을 때는 주석 코드 사용
+                # logo의 크기를 %로 정하면 사용 X
+                # if not self.addlogoIs:
+                #     if self.rotate == 90:
+                #         cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
+                #     elif self.rotate == 180:
+                #         cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
+                #     elif self.rotate == 270:
+                #         cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                # else:
+                #     if self.rotate == 90:
+                #         temp_w = int(self.heightLabel.text())
+                #         temp_h = int(self.widthLabel.text())
+                #     elif self.rotate == 180:
+                #         temp_w = int(self.widthLabel.text())
+                #         temp_h = int(self.heightLabel.text())
+                #     elif self.rotate == 270:
+                #         temp_w = int(self.heightLabel.text())
+                #         temp_h = int(self.widthLabel.text())
+                #
+                #     logoImg = cv2.imread(self.logoPath)
+                #     logo_w = logoImg.shape[1]
+                #     logo_h = logoImg.shape[0]
+                #
+                #     if temp_w > logo_w and temp_h > logo_h:
+                #         if self.rotate == 90:
+                #             cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
+                #         elif self.rotate == 180:
+                #             cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
+                #         elif self.rotate == 270:
+                #             cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                #     else:
+                #         self.rotateIs = False
+                #         self.rotateOff.setChecked(True)
+                if self.rotate == 90:
+                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_CLOCKWISE)
+                elif self.rotate == 180:
+                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_180)
+                elif self.rotate == 270:
+                    cvImage = cv2.rotate(cvImage, cv2.ROTATE_90_COUNTERCLOCKWISE)
             if self.addlogoIs:
+                t = int(self.addlogoLevel.replace('%', '')) / 100
+                new_w = int(int(cvImage.shape[1]) * t)
+                new_h = int(int(cvImage.shape[0]) * t)
+
+
                 logoImg = cv2.imread(self.logoPath, -1)
+                logoImg = cv2.resize(logoImg, dsize=(new_w, new_h), interpolation=cv2.INTER_AREA)
                 dst = cvImage.copy()
 
                 # y_offset = int(cvImage.shape[0] * self.addlogoY / 100)
                 # x_offset = int(cvImage.shape[1] * self.addlogoX / 100)
-
+                # print("self.addlogoY :", self.addlogoX)
+                # print("self.addlogoX :", self.addlogoY)
+                # print("cvImage.shape[0] :", cvImage.shape[0])
+                # print("cvImage.shape[1] :", cvImage.shape[1])
+                # print("logoImg.shape[0] :", logoImg.shape[0])
+                # print("logoImg.shape[1] :", logoImg.shape[1])
                 y_offset = int((cvImage.shape[0] - logoImg.shape[0]) * self.addlogoY / 100)
                 x_offset = int((cvImage.shape[1] - logoImg.shape[1]) * self.addlogoX / 100)
 
@@ -910,6 +947,8 @@ class TagWindow(QDialog):
                 else:
                     for c in range(0, 3):
                         dst[y1:y2, x1:x2, c] = (alpha_s_logo * logoImg[:, :, c] + alpha_l_logo * dst[y1:y2, x1:x2, c])
+
+
 
                 cvImage = dst
             if self.borderIs:
@@ -944,6 +983,10 @@ class TagWindow(QDialog):
             savePath = saveDirPath + '/' + self.videoName
             meta_data = video_info(filepath)
 
+            data = OrderedDict()
+            data["video_name"] = base
+            transformData = []
+
             count = 1
 
             if self.brightnessIs:
@@ -953,54 +996,106 @@ class TagWindow(QDialog):
 
                 filepath = path
                 count += 1
+
+                transform = "brightness"
+                level = self.brightness
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.cropIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 crop(filepath, path, *meta_data, level=self.crop)
 
                 filepath = path
                 count += 1
+
+                meta_data = video_info(filepath)
+
+                transform = "crop"
+                level = self.crop
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.flipIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 flip(filepath, path, *meta_data, level=self.flip)
 
                 filepath = path
                 count += 1
+
+                transform = "flip"
+                level = self.flip
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.formatIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 format(filepath, path, *meta_data, level=self.format)
 
                 filepath = path
                 count += 1
+
+                transform = "format"
+                level = self.format
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.framerateIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 framerate(filepath, path, *meta_data, level=self.framerate)
 
                 filepath = path
                 count += 1
+
+                transform = "framerate"
+                level = self.framerate
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.grayscaleIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 grayscale(filepath, path, *meta_data, level='Light')
 
                 filepath = path
                 count += 1
+
+                transform = "grayscale"
+                level = "Light"
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.resolutionIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 resolution(filepath, path, *meta_data, level=self.resolution)
 
                 filepath = path
                 count += 1
+
+                transform = "resolution"
+                level = self.resolution
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.rotateIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 rotate(filepath, path, *meta_data, level=self.rotate)
 
                 filepath = path
+                meta_data = video_info(filepath)
                 count += 1
+
+                transform = "rotate"
+                level = self.rotate
+                transformData.append({"transform": transform,
+                                      "level": level})
             if self.addlogoIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
 
                 filepath = path
                 count += 1
+
+                transform = "addlogo"
+                level = self.addlogoLevel
+                location_x = str(self.addlogoX) + "%"
+                location_y = str(self.addlogoY) + "%"
+                transformData.append({"transform": transform,
+                                      "level": level,
+                                      "location_x": location_x,
+                                      "location_y": location_y})
             if self.borderIs:
                 path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
                 add_border(filepath, path, *meta_data, level=self.border)
@@ -1008,11 +1103,20 @@ class TagWindow(QDialog):
                 filepath = path
                 count += 1
 
+                transform = "border"
+                level = self.border
+                transformData.append({"transform": transform,
+                                      "level": level})
+
             finalBase = base
             temp = saveDirPath + "/" + finalBase
             base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
             finalVideoPath = os.path.join(tempSaveDirPath, base)
             shutil.copyfile(finalVideoPath, temp)
+
+            data["transforms"] = transformData
+            with open(saveDirPath+'/'+finalBase+'.json', 'w', encoding='utf-8') as make_file:
+                json.dump(data, make_file, indent="\t")
 
     def border_change(self):
         radioBtn = self.sender()
@@ -1111,7 +1215,7 @@ class TagWindow(QDialog):
             self.addlogoIs = False
         else:
             self.addlogoIs = True
-            self.logoPath = random.choice(glob.glob(os.path.join('.\\', 'logo', self.addlogoLevel, '*')))
+            self.logoPath = random.choice(glob.glob(os.path.join('.\\', 'logo', '*')))
         self.preview()
 
     def resolution_change(self):
@@ -1304,10 +1408,24 @@ class TagWindow(QDialog):
                         self.rotate180.setChecked(True)
                     elif self.rotate == 270:
                         self.rotate270.setChecked(True)
-
-
+            self.preview()
         except:
             print("error")
+
+    def logoChange(self):
+        filepath, _ = QFileDialog.getOpenFileName(self, 'Choose logo image', '.', "Image Files (*.png *.jpg *.gif)")
+        filebase = os.path.basename(filepath)
+
+        if filepath:
+            image_file = os.listdir('./logo')
+
+            for f in image_file:
+                image_path = os.path.join("./logo", f)
+                image_path.replace('\\', '/')
+                os.remove(image_path)
+
+            f = './logo/' + filebase
+            shutil.copy(filepath, f)
 
     def transformClear(self):
         self.borderSlider.setValue(0)

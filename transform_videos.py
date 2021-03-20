@@ -331,8 +331,7 @@ def transform_videos(vid_path, save_path, json_path):
     finalBase = filebase
 
     data["transforms"] = transformData
-    print("123456789 :", tempSaveDirPath+'/'+finalBase + '.json')
-    with open(tempSaveDirPath + '/' + finalBase + '.json', 'w', encoding='utf-8') as make_file:
+    with open(save_path + '/' + finalBase + '.json', 'w', encoding='utf-8') as make_file:
         json.dump(data, make_file, indent="\t")
 
     if formatIs:

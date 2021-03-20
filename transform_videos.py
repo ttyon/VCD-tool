@@ -46,7 +46,7 @@ def framerate(inputpath, outputpath, width, height, fps, level='Light'):
 
     command = 'ffmpeg -y -i ' + inputpath + ' -vf "setpts=1.25*PTS" -r ' + str(re_fps) + ' ' + outputpath
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def format(inputpath, outputpath, level='Light'):
@@ -62,7 +62,7 @@ def format(inputpath, outputpath, level='Light'):
         command = 'ffmpeg -y -i ' + inputpath + ' ' + outputpath
     # command = 'ffmpeg -y -i ' + inputpath + ' -codec copy ' + outputpath
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def crop(inputpath, outputpath, width, height, fps, level='Light'):
@@ -90,7 +90,7 @@ def crop(inputpath, outputpath, width, height, fps, level='Light'):
         crop_x) + ':' + str(crop_y) + '" ' + outputpath
 
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def rotate(inputpath, outputpath, width, height, fps, level='Light'):
@@ -104,7 +104,7 @@ def rotate(inputpath, outputpath, width, height, fps, level='Light'):
     # transpose = random.choice(rotate_list)
     command = 'ffmpeg -y -i ' + inputpath + ' -vf ' + transpose + ' ' + outputpath
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def video_info(videopath):
@@ -141,7 +141,7 @@ def add_border(videopath, outputpath, width, height, fps, level='Light'):
               outputpath
 
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 # command = 'ffmpeg -y -i ' + \
 # 		  outputpath + \
 # 		  ' -vf scale=' + str(width) + ':' + str(height) + ' ' + \
@@ -179,7 +179,7 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
         logo_y) + '" ' + outputpath
 
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def brightness(videopath, outputpath, level):
@@ -187,7 +187,7 @@ def brightness(videopath, outputpath, level):
 
     command = 'ffmpeg -y -i ' + videopath + ' -vf eq=brightness=' + str(rate) + ' -c:a copy ' + outputpath
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def flip(videopath, outputpath, width, height, fps, level='Light'):
@@ -197,13 +197,13 @@ def flip(videopath, outputpath, width, height, fps, level='Light'):
         command = 'ffmpeg -y -i ' + videopath + ' -filter:v "vflip" -c:a copy ' + outputpath
 
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def grayscale(videopath, outputpath, width, height, fps, level='Light'):
     command = 'ffmpeg -y -i ' + videopath + ' -vf format=gray ' + outputpath
     # os.system(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(command, shell=True, stdin=None)
 
 
 def transform_videos(vid_path, save_path, json_path):

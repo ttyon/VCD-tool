@@ -167,7 +167,6 @@ class videoCreateRunnable(QRunnable):
 
         if self.brightnessIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ brightness")
             brightness(filepath, path, level=self.brightness)
 
             filepath = path
@@ -182,7 +181,7 @@ class videoCreateRunnable(QRunnable):
             idx += 1
         if self.cropIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ crop")
+
             crop(filepath, path, *meta_data, level=self.crop)
 
             filepath = path
@@ -198,7 +197,6 @@ class videoCreateRunnable(QRunnable):
             idx += 1
         if self.flipIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ flip")
             flip(filepath, path, *meta_data, level=self.flip)
 
             filepath = path
@@ -226,7 +224,6 @@ class videoCreateRunnable(QRunnable):
         #     idx += 1
         if self.framerateIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ framerate")
             framerate(filepath, path, *meta_data, level=self.framerate)
 
             filepath = path
@@ -240,7 +237,6 @@ class videoCreateRunnable(QRunnable):
             idx += 1
         if self.grayscaleIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ grayscale")
             grayscale(filepath, path, *meta_data, level='Light')
 
             filepath = path
@@ -254,7 +250,6 @@ class videoCreateRunnable(QRunnable):
             QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
         if self.resolutionIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㄹㄹㄹ resolution")
             resolution(filepath, path, *meta_data, level=self.resolution)
 
             filepath = path
@@ -312,7 +307,6 @@ class videoCreateRunnable(QRunnable):
             idx += 1
         if self.formatIs:
             path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-            print("ㅡㅡ")
             format(filepath, path, level=self.format)
 
             filepath = path
@@ -329,11 +323,7 @@ class videoCreateRunnable(QRunnable):
             finalBase = base
             temp = self.saveDirPath + "/" + finalBase + self.format
             base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1] + self.format
-            print("finalBase :", finalBase)
-            print("temp :", temp)
-            print("base :", base)
             finalVideoPath = os.path.join(tempSaveDirPath, base)
-            print("finalVideoPath :", finalVideoPath)
             shutil.copyfile(finalVideoPath, temp)
         else:
             finalBase = base

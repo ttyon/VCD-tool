@@ -42,12 +42,14 @@ def framerate(inputpath, outputpath, width, height, fps, level='Light'):
 
 
 def format(inputpath, outputpath, level='Light'):
+	print("왜 안 되노")
 	if level == '.mp4':
 		new_ext = '.mp4'
 	else:
 		new_ext = '.avi'
 	outputpath = outputpath + new_ext
 	command = ''
+	print("outputpath :", outputpath)
 	if new_ext=='.avi':
 		command = 'ffmpeg -y -i ' + inputpath + ' -ar 22050 -b 2048k ' + outputpath
 	elif new_ext == '.mp4':

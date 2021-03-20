@@ -86,6 +86,273 @@ def addActions(widget, actions):
         else:
             widget.addAction(action)
 
+class WorkerSignals(QObject):
+    finished = pyqtSignal()
+
+
+class videoCreateRunnable(QRunnable):
+    finished = pyqtSignal()
+
+    def __init__(self, saveDirPath, progress, videoPath=None, videoName=None, brightnessIs=False, brightness=None,
+                 cropIs=False, crop=None, flipIs=False, flip=None,
+                 formatIs=False, format=None, framerateIs=False, framerate=None, grayscaleIs=False, grayscale=None,
+                 resolutionIs=False, resolution=None, rotateIs=False, rotate=None, addlogoIs=False, addlogoLevel=None,
+                 addlogoX=None, addlogoY=None, borderIs=False, border=None):
+        QRunnable.__init__(self)
+
+        self.saveDirPath = saveDirPath
+        self.w = progress
+        self.videoPath = videoPath
+        self.videoName = videoName
+        self.brightnessIs = brightnessIs
+        self.brightness = brightness
+        self.cropIs = cropIs
+        self.crop = crop
+        self.flipIs = flipIs
+        self.flip = flip
+        self.formatIs = formatIs
+        self.format = format
+        self.framerateIs = framerateIs
+        self.framerate = framerate
+        self.grayscaleIs = grayscaleIs
+        self.grayscale = grayscale
+        self.resolutionIs = resolutionIs
+        self.resolution = resolution
+        self.rotateIs = rotateIs
+        self.rotate = rotate
+        self.addlogoIs = addlogoIs
+        self.addlogoLevel = addlogoLevel
+        self.addlogoX = addlogoX
+        self.addlogoY = addlogoY
+        self.borderIs = borderIs
+        self.border = border
+
+    def run(self):
+        tempSaveDirPath = "./videos"
+        filepath = self.videoPath
+        base = os.path.basename(filepath)
+        savePath = self.saveDirPath + '/' + self.videoName
+        meta_data = video_info(filepath)
+
+        data = OrderedDict()
+        data["video_name"] = base
+        transformData = []
+
+        count = 1
+
+        progress_count = 0
+
+        if self.brightnessIs:
+            progress_count += 1
+        if self.cropIs:
+            progress_count += 1
+        if self.flipIs:
+            progress_count += 1
+        if self.formatIs:
+            progress_count += 1
+        if self.framerateIs:
+            progress_count += 1
+        if self.grayscaleIs:
+            progress_count += 1
+        if self.resolutionIs:
+            progress_count += 1
+        if self.rotateIs:
+            progress_count += 1
+        if self.addlogoIs:
+            progress_count += 1
+        if self.borderIs:
+            progress_count += 1
+
+        idx = 1
+
+        if self.brightnessIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ brightness")
+            brightness(filepath, path, level=self.brightness)
+
+            filepath = path
+            count += 1
+
+
+            transform = "brightness"
+            level = self.brightness
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.cropIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ crop")
+            crop(filepath, path, *meta_data, level=self.crop)
+
+            filepath = path
+            count += 1
+
+            meta_data = video_info(filepath)
+
+            transform = "crop"
+            level = self.crop
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.flipIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ flip")
+            flip(filepath, path, *meta_data, level=self.flip)
+
+            filepath = path
+            count += 1
+
+            transform = "flip"
+            level = self.flip
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        # if self.formatIs:
+        #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+        #     print("ㄹㄹㄹ format")
+        #     format(filepath, path, *meta_data, level=self.format)
+        #
+        #     filepath = path
+        #     count += 1
+        #
+        #     transform = "format"
+        #     level = self.format
+        #     transformData.append({"transform": transform,
+        #                           "level": level})
+        #     QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+        #     idx += 1
+        if self.framerateIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ framerate")
+            framerate(filepath, path, *meta_data, level=self.framerate)
+
+            filepath = path
+            count += 1
+
+            transform = "framerate"
+            level = self.framerate
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.grayscaleIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ grayscale")
+            grayscale(filepath, path, *meta_data, level='Light')
+
+            filepath = path
+            count += 1
+            idx += 1
+
+            transform = "grayscale"
+            level = "Light"
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+        if self.resolutionIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㄹㄹㄹ resolution")
+            resolution(filepath, path, *meta_data, level=self.resolution)
+
+            filepath = path
+            count += 1
+
+            transform = "resolution"
+            level = self.resolution
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.rotateIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            rotate(filepath, path, *meta_data, level=self.rotate)
+
+            filepath = path
+            meta_data = video_info(filepath)
+            count += 1
+
+            transform = "rotate"
+            level = self.rotate
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.addlogoIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
+
+            filepath = path
+            count += 1
+
+            transform = "addlogo"
+            level = self.addlogoLevel
+            location_x = str(self.addlogoX) + "%"
+            location_y = str(self.addlogoY) + "%"
+            transformData.append({"transform": transform,
+                                  "level": level,
+                                  "location_x": location_x,
+                                  "location_y": location_y})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.borderIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            add_border(filepath, path, *meta_data, level=self.border)
+
+            filepath = path
+            count += 1
+
+            transform = "border"
+            level = self.border
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+        if self.formatIs:
+            path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            print("ㅡㅡ")
+            format(filepath, path, level=self.format)
+
+            filepath = path
+            count += 1
+
+            transform = "format"
+            level = self.format
+            transformData.append({"transform": transform,
+                                  "level": level})
+            QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, idx / progress_count * 100))
+            idx += 1
+
+        if self.formatIs:
+            finalBase = base
+            temp = self.saveDirPath + "/" + finalBase + self.format
+            base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1] + self.format
+            print("finalBase :", finalBase)
+            print("temp :", temp)
+            print("base :", base)
+            finalVideoPath = os.path.join(tempSaveDirPath, base)
+            print("finalVideoPath :", finalVideoPath)
+            shutil.copyfile(finalVideoPath, temp)
+        else:
+            finalBase = base
+            temp = self.saveDirPath + "/" + finalBase
+            base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
+            finalVideoPath = os.path.join(tempSaveDirPath, base)
+            shutil.copyfile(finalVideoPath, temp)
+        # finalBase = base
+        # temp = self.saveDirPath + "/" + finalBase
+        # base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
+        # finalVideoPath = os.path.join(tempSaveDirPath, base)
+        # shutil.copyfile(finalVideoPath, temp)
+
+        data["transforms"] = transformData
+        with open(self.saveDirPath + '/' + finalBase + '.json', 'w', encoding='utf-8') as make_file:
+            json.dump(data, make_file, indent="\t")
+
+        QMetaObject.invokeMethod(self.w, "setValue", Qt.QueuedConnection, Q_ARG(int, 100))
+
 
 class TagWindow(QDialog):
     def __init__(self):
@@ -96,8 +363,10 @@ class TagWindow(QDialog):
         self.image = None
         self.qImg = None
         self.pixmap = None
-        self.progress = None
         self.logoPath = None
+
+        self.progress = None
+        self._beginner = True
 
         # info
         self.filePath = None
@@ -785,6 +1054,9 @@ class TagWindow(QDialog):
         self.loadBtn.setText(_translate("Dialog", "Json\nLoad"))
         self.logoChangeBtn.setText(_translate("Dialog", "Logo\nChange"))
 
+    def beginner(self):
+        return self._beginner
+
     def openVideo(self):
         filepath, _ = QFileDialog.getOpenFileName(self, 'Choose video', '.', "Video Files (*.avi *.mp4 *.flv)")
         if filepath:
@@ -976,147 +1248,201 @@ class TagWindow(QDialog):
         # self.printCurrentTransform()
         saveDirPath = QFileDialog.getExistingDirectory()
 
-        if self.videoPath:
-            tempSaveDirPath = "./videos"
-            filepath = self.videoPath
-            base = os.path.basename(filepath)
-            savePath = saveDirPath + '/' + self.videoName
-            meta_data = video_info(filepath)
+        if self.videoPath and saveDirPath:
+            assert self.beginner()
 
-            data = OrderedDict()
-            data["video_name"] = base
-            transformData = []
+            self.progress = QProgressDialog('video transform progress', None, 0, 100, self)
+            self.progress.setWindowTitle("Transform video")
+            self.progress.setWindowModality(Qt.WindowModal)
+            self.progress.show()
+            self.progress.setValue(0)
 
-            count = 1
 
-            if self.brightnessIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            # print("saveDirPath :", saveDirPath)
+            # print("self.progress :", self.progress)
+            # print("self.videopath :", self.videoPath)
+            # print("self.videoname :", self.videoName)
+            # print("self.brightnessIs :", self.brightnessIs)
+            # print("self.brightness :", self.brightness)
+            # print("self.cropIs :", self.cropIs)
+            # print("self.crop :", self.crop)
+            # print("self.flipIs :", self.flipIs)
+            # print("self.flip :", self.flip)
+            # print("self.formatIs :", self.formatIs)
+            # print("self.foramt :", self.format)
+            # print("self.framerateIs :", self.framerateIs)
+            # print("self.framerate :", self.framerate)
+            # print("self.grayscaleIs :", self.grayscaleIs)
+            # print("self.grayscale :", self.grayscale)
+            # print("self.resolutionIs :", self.resolutionIs)
+            # print("self.resolution :", self.resolution)
+            # print("self.rotateIs :", self.rotateIs)
+            # print("self.rotate :", self.rotate)
+            # print("self.addlogoIs :", self.addlogoIs)
+            # print("self.addlogoLevel :", self.addlogoLevel)
+            # print("self.addlogoX :", self.addlogoX)
+            # print("self.addlogoY :", self.addlogoY)
+            # print("self.borderIs :", self.borderIs)
+            # print("self.border :", self.border)
 
-                brightness(filepath, path, level=self.brightness)
+            # def __init__(self, saveDirPath, progress, videoPath=None, videoName=None,
+            #              brightnessIs=None, brightness=None,
+            #              cropIs=None, crop=None, flipIs=None, flip=None,
+            #              formatIs=None, format=None, framerateIs=None, framerate=None,
+            #              grayscaleIs=None, grayscale=None, resolutionIs=None, resolution=None,
+            #              rotateIs=None, rotate=None, addlogoIs=None, addlogoLevel=None,
+            #              addlogoX=None, addlogoY=None, borderIs=None, border=None):
 
-                filepath = path
-                count += 1
+            runnable = videoCreateRunnable(saveDirPath, self.progress, videoPath=self.videoPath, videoName=self.videoName,
+                                           brightnessIs=self.brightnessIs, brightness=self.brightness,
+                                           cropIs=self.cropIs, crop=self.crop, flipIs=self.flipIs, flip=self.flip,
+                                           formatIs=self.formatIs, format=self.format, framerateIs=self.framerateIs, framerate=self.framerate,
+                                           grayscaleIs=self.grayscaleIs, grayscale=self.grayscale, resolutionIs=self.resolutionIs, resolution=self.resolution,
+                                           rotateIs=self.rotateIs, rotate=self.rotate, addlogoIs=self.addlogoIs, addlogoLevel=self.addlogoLevel,
+                                           addlogoX=self.addlogoX, addlogoY=self.addlogoY, borderIs=self.borderIs, border=self.border)
+            self.pool = QThreadPool.globalInstance()
+            self.pool.start(runnable)
 
-                transform = "brightness"
-                level = self.brightness
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.cropIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                crop(filepath, path, *meta_data, level=self.crop)
-
-                filepath = path
-                count += 1
-
-                meta_data = video_info(filepath)
-
-                transform = "crop"
-                level = self.crop
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.flipIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                flip(filepath, path, *meta_data, level=self.flip)
-
-                filepath = path
-                count += 1
-
-                transform = "flip"
-                level = self.flip
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.formatIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                format(filepath, path, *meta_data, level=self.format)
-
-                filepath = path
-                count += 1
-
-                transform = "format"
-                level = self.format
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.framerateIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                framerate(filepath, path, *meta_data, level=self.framerate)
-
-                filepath = path
-                count += 1
-
-                transform = "framerate"
-                level = self.framerate
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.grayscaleIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                grayscale(filepath, path, *meta_data, level='Light')
-
-                filepath = path
-                count += 1
-
-                transform = "grayscale"
-                level = "Light"
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.resolutionIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                resolution(filepath, path, *meta_data, level=self.resolution)
-
-                filepath = path
-                count += 1
-
-                transform = "resolution"
-                level = self.resolution
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.rotateIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                rotate(filepath, path, *meta_data, level=self.rotate)
-
-                filepath = path
-                meta_data = video_info(filepath)
-                count += 1
-
-                transform = "rotate"
-                level = self.rotate
-                transformData.append({"transform": transform,
-                                      "level": level})
-            if self.addlogoIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
-
-                filepath = path
-                count += 1
-
-                transform = "addlogo"
-                level = self.addlogoLevel
-                location_x = str(self.addlogoX) + "%"
-                location_y = str(self.addlogoY) + "%"
-                transformData.append({"transform": transform,
-                                      "level": level,
-                                      "location_x": location_x,
-                                      "location_y": location_y})
-            if self.borderIs:
-                path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
-                add_border(filepath, path, *meta_data, level=self.border)
-
-                filepath = path
-                count += 1
-
-                transform = "border"
-                level = self.border
-                transformData.append({"transform": transform,
-                                      "level": level})
-
-            finalBase = base
-            temp = saveDirPath + "/" + finalBase
-            base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
-            finalVideoPath = os.path.join(tempSaveDirPath, base)
-            shutil.copyfile(finalVideoPath, temp)
-
-            data["transforms"] = transformData
-            with open(saveDirPath+'/'+finalBase+'.json', 'w', encoding='utf-8') as make_file:
-                json.dump(data, make_file, indent="\t")
+            # tempSaveDirPath = "./videos"
+            # filepath = self.videoPath
+            # base = os.path.basename(filepath)
+            # savePath = saveDirPath + '/' + self.videoName
+            # meta_data = video_info(filepath)
+            #
+            # data = OrderedDict()
+            # data["video_name"] = base
+            # transformData = []
+            #
+            # count = 1
+            #
+            # if self.brightnessIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #
+            #     brightness(filepath, path, level=self.brightness)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "brightness"
+            #     level = self.brightness
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.cropIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     crop(filepath, path, *meta_data, level=self.crop)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     meta_data = video_info(filepath)
+            #
+            #     transform = "crop"
+            #     level = self.crop
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.flipIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     flip(filepath, path, *meta_data, level=self.flip)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "flip"
+            #     level = self.flip
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.formatIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     format(filepath, path, *meta_data, level=self.format)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "format"
+            #     level = self.format
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.framerateIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     framerate(filepath, path, *meta_data, level=self.framerate)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "framerate"
+            #     level = self.framerate
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.grayscaleIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     grayscale(filepath, path, *meta_data, level='Light')
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "grayscale"
+            #     level = "Light"
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.resolutionIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     resolution(filepath, path, *meta_data, level=self.resolution)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "resolution"
+            #     level = self.resolution
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.rotateIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     rotate(filepath, path, *meta_data, level=self.rotate)
+            #
+            #     filepath = path
+            #     meta_data = video_info(filepath)
+            #     count += 1
+            #
+            #     transform = "rotate"
+            #     level = self.rotate
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            # if self.addlogoIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     add_logo(filepath, path, *meta_data, self.addlogoX / 100, self.addlogoY / 100, level=self.addlogoLevel)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "addlogo"
+            #     level = self.addlogoLevel
+            #     location_x = str(self.addlogoX) + "%"
+            #     location_y = str(self.addlogoY) + "%"
+            #     transformData.append({"transform": transform,
+            #                           "level": level,
+            #                           "location_x": location_x,
+            #                           "location_y": location_y})
+            # if self.borderIs:
+            #     path = os.path.join(tempSaveDirPath, base.split('.')[0] + "_" + str(count) + "." + base.split('.')[1])
+            #     add_border(filepath, path, *meta_data, level=self.border)
+            #
+            #     filepath = path
+            #     count += 1
+            #
+            #     transform = "border"
+            #     level = self.border
+            #     transformData.append({"transform": transform,
+            #                           "level": level})
+            #
+            # finalBase = base
+            # temp = saveDirPath + "/" + finalBase
+            # base = base.split('.')[0] + "_" + str(count - 1) + "." + base.split('.')[1]
+            # finalVideoPath = os.path.join(tempSaveDirPath, base)
+            # shutil.copyfile(finalVideoPath, temp)
+            #
+            # data["transforms"] = transformData
+            # with open(saveDirPath+'/'+finalBase+'.json', 'w', encoding='utf-8') as make_file:
+            #     json.dump(data, make_file, indent="\t")
 
     def border_change(self):
         radioBtn = self.sender()
@@ -1315,7 +1641,6 @@ class TagWindow(QDialog):
 
         try:
             self.transformClear()
-
             with open(filepath, 'r') as f:
                 json_data = json.load(f)
             transforms = json_data['transforms']
@@ -1428,7 +1753,10 @@ class TagWindow(QDialog):
             shutil.copy(filepath, f)
 
     def transformClear(self):
-        self.borderSlider.setValue(0)
+        self.borderOff.setChecked(True)
+        self.borderCIF.setChecked(False)
+        self.borderVGA.setChecked(False)
+
         self.brightnessBox.setCurrentIndex(3)
         self.cropSlider.setValue(0)
 
@@ -1449,11 +1777,14 @@ class TagWindow(QDialog):
         self.grayscaleOn.setChecked(False)
 
         self.logoLevelBox.setCurrentIndex(0)
+
         self.addlogoXslider.setValue(0)
         self.addlogoYslider.setValue(0)
+
         self.resolutionOff.setChecked(True)
         self.resolutionCIF.setChecked(False)
         self.resolutionQCIF.setChecked(False)
+
         self.rotateOff.setChecked(True)
         self.rotate90.setChecked(False)
         self.rotate180.setChecked(False)

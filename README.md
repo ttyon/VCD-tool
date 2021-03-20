@@ -1,3 +1,4 @@
+
 # 비디오 변형 옵션파일 생성 및 변형 제작도구 설치 및 실행
 - 10가지 변형에 대해 json option file 생성 및 로드
 - tool 내부에서 변형된 영상 썸네일 간략히 출력
@@ -37,11 +38,12 @@ python app.py
 ## How to use
 ### 변형 option file 생성
 
-<img width="926" alt="KakaoTalk_20200923_174424241" src="https://user-images.githubusercontent.com/46225226/108618700-8f518200-7463-11eb-943a-18dfea4e5bf6.png">
+<img width="926" alt="KakaoTalk_20200923_174424241" src="https://user-images.githubusercontent.com/46225226/111866470-0588cc00-89b1-11eb-8939-06b4fa1f860e.png">
 
-#### 1. 변형의 예시를 보기 위해 'Open Video'를 통해 비디오를 선택
+#### 1-1. 변형의 예시를 보기 위해 'Open Video'를 통해 비디오를 선택
+#### 1-2. 프로그램내에서 선택한 하나의 동영상을 변환. 변환된 동영상의 annotation 동시 생성.
 
-#### 2. 변형이 된  동영상 예시 섬네일 출력
+#### 2. 변형이 된 동영상 예시 섬네일 출력
 
 #### 3. 원본 동영상 파일의 정보 출력
 
@@ -75,7 +77,7 @@ gray scale
 (0.299, 0.587, 0.114) 흑백 변환
 
 add logo
-logo의 크기는 Light, Medium, Heavy
+logo의 크기는 영상의 길이에 비례해 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80% 선택 가능
 x, y축 바를 조절하여 로고의 위치 변환 가능
 
 resolution
@@ -87,17 +89,16 @@ rotate
 180 : 시계 방향으로 180도 영상 변환
 270 : 시계 방향으로 270도 영상 변환   
 
-* add logo 변환과 rotate 변환을 같이 적용시 주의할 점 *
-2개의 변환을 같이 적용 시, logo의 넓이와 길이가 rotate된 영상의 넓이와 길이보다 크다면
-변환이 rotate 변환이 불가능 합니다. 
 ```
 
 #### 5. 
-#### 'Save' : 프로그램내에서 사용자화한 option 파일을 json 파일 형식으로 저장
-#### 'Load' : 이미 존재한 json option 파일을 불러와 수정 가능
+#### 'Logo change' : 프로그램 내에서 add logo로 사용할 이미지 변경. 초기 이미지는 ffmpeg 로고로 설정.
+#### 'Json Dump' : 프로그램내에서 사용자화한 option 파일을 json 파일 형식으로 저장
+#### 'Json Load' : 이미 존재한 json option 파일을 불러와 수정 가능
 
 
-### command line을 통한 하나의 디렉토리 안의 동영상들 변형
+
+### command line을 통한 하나의 디렉토리 안의 동영상들 변형, 변환된 동영상의 annotation 동시 생성
 
 ```
 video 들이 저장되어 있는 디렉토리의 구성 (--video_dir_path의 형태)

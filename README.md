@@ -75,6 +75,7 @@ framerate
 
 gray scale
 (0.299, 0.587, 0.114) 흑백 변환
+--> annotation상에서 gray scale의 변환은 on으로 표기
 
 add logo
 logo의 크기는 영상의 가로, 세로에 비례해 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80% 선택 가능

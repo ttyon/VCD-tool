@@ -117,7 +117,7 @@ usage: transform_videos.py [-h] --video_dir_path VIDEO_DIR_PATH \
                            --save_dir_path SAVE_DIR_PATH \
                            --json_file_path JSON_FILE_PATH 
                            
-변환된 video들과 annotation들이 저장되어 있는 디렉토리의 구성 (--video_dir_path의 형태)
+변환된 video들과 annotation들이 저장되어 있는 디렉토리의 구성
 (DIRECTORY)
 ├── aaa.flv
 ├── aaa.flv.json

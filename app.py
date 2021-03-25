@@ -1181,27 +1181,19 @@ class TagWindow(QDialog):
                 new_w = int(int(cvImage.shape[1]) * t)
                 new_h = int(int(cvImage.shape[0]) * t)
 
-
                 logoImg = cv2.imread(self.logoPath, -1)
+
                 logoImg = cv2.resize(logoImg, dsize=(new_w, new_h), interpolation=cv2.INTER_AREA)
                 dst = cvImage.copy()
-
-                # y_offset = int(cvImage.shape[0] * self.addlogoY / 100)
-                # x_offset = int(cvImage.shape[1] * self.addlogoX / 100)
-                # print("self.addlogoY :", self.addlogoX)
-                # print("self.addlogoX :", self.addlogoY)
-                # print("cvImage.shape[0] :", cvImage.shape[0])
-                # print("cvImage.shape[1] :", cvImage.shape[1])
-                # print("logoImg.shape[0] :", logoImg.shape[0])
-                # print("logoImg.shape[1] :", logoImg.shape[1])
                 y_offset = int((cvImage.shape[0] - logoImg.shape[0]) * self.addlogoY / 100)
                 x_offset = int((cvImage.shape[1] - logoImg.shape[1]) * self.addlogoX / 100)
 
                 y1, y2 = y_offset, y_offset + logoImg.shape[0]
                 x1, x2 = x_offset, x_offset + logoImg.shape[1]
-
                 alpha_s_logo = logoImg[:, :, 3] / 255.0
+
                 alpha_l_logo = 1.0 - alpha_s_logo
+
 
                 if self.grayscaleIs:
                     for c in range(0, 3):
@@ -1741,6 +1733,9 @@ class TagWindow(QDialog):
 
             f = './logo/' + filebase
             shutil.copy(filepath, f)
+
+            self.logoPath = filepath
+            self.preview()
 
     def transformClear(self):
         self.borderOff.setChecked(True)

@@ -175,11 +175,12 @@ def add_logo(videopath, outputpath, width, height, fps, xlocation, ylocation, le
     logo_x = (width - temp_x) * xlocation
     logo_y = (height - temp_y) * ylocation
 
-    command = 'ffmpeg -y -i ' + videopath + ' -i ' + logopath + ' -filter_complex "overlay=' + str(logo_x) + ":" + str(
+    command = 'ffmpeg -y -i ' + videopath + ' -i ./temp.png -filter_complex "overlay=' + str(logo_x) + ":" + str(
         logo_y) + '" ' + outputpath
 
     # os.system(command)
     subprocess.call(command, shell=True, stdin=None)
+    os.remove('./temp.png')
 
 
 def brightness(videopath, outputpath, level):

@@ -132,8 +132,8 @@ usage: transform_videos.py [-h] --video_dir_path VIDEO_DIR_PATH \
 ├── fff.flv
 ├── fff.flv.json
 ├── ...
-├── fff.flv
-└── fff.flv.json
+├── zzz.flv
+└── zzz.flv.json
 
 ex) python transform_videos.py --video_dir_path [변형할 비디오 디렉토리 경로] --save_dir_path [변형된 비디오 저장 디렉토리 경로] --json_file_path [json option 파일 경로]
 ```
